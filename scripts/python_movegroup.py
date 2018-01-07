@@ -60,7 +60,7 @@ class SawyerClass(object):
                                               Float32MultiArray,
                                               self._moveit_joint_state_callback,
                                               queue_size=1)
-        self.diagnostic = rospy.Publisher(pub_topic, String)
+        self.diagnostic = rospy.Publisher(pub_topic, String, queue_size=1)
         self.robot = moveit_commander.RobotCommander()
         self.scene = moveit_commander.PlanningSceneInterface()
         self.group = moveit_commander.MoveGroupCommander(PLANNING_GROUP)
