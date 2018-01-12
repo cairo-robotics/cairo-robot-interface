@@ -74,16 +74,12 @@ class PoseRecorder(object):
                     pose_array[0] = pose_right['position'].x
                     pose_array[1] = pose_right['position'].y
                     pose_array[2] = pose_right['position'].z
-
                     pose_array[3] = pose_right['orientation'].x
                     pose_array[4] = pose_right['orientation'].y
                     pose_array[5] = pose_right['orientation'].z
                     pose_array[6] = pose_right['orientation'].w
-
-                    print pose_array
-
                     f.write("%f," % (self._time_stamp(),))
-                    f.write(','.join([str(x) for x in pose_array]) + ',' + '\n')
+                    f.write(','.join([str(x) for x in pose_array]) + '\n')
 
                     self._rate.sleep()
 
