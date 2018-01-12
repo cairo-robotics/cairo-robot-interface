@@ -20,13 +20,13 @@ def main():
     joint_state.layout.dim.append(dim)
     joint_state.layout.data_offset = 0
     joint_state.data = [0] *7
-    joint_state.data[0] = -0.4
-    joint_state.data[1] = 1.0
-    joint_state.data[2] = -3.0
-    joint_state.data[3] = 2.0
-    joint_state.data[4] = -0.1
-    joint_state.data[5] = 0.5
-    joint_state.data[6] = -0.6
+    joint_state.data[0] = 1.3
+    joint_state.data[1] = .5
+    joint_state.data[2] = -1.2
+    joint_state.data[3] = 1.4
+    joint_state.data[4] = -1.1
+    joint_state.data[5] = -1.2
+    joint_state.data[6] = -4.7
     joint_pub.publish(joint_state)
 
 

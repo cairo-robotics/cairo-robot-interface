@@ -28,6 +28,7 @@ import moveit_commander
 import moveit_msgs.msg
 import geometry_msgs.msg
 from geometry_msgs.msg import Pose
+from geometry_msgs.msg import PoseArray
 from std_msgs.msg import String
 from std_msgs.msg import Float32MultiArray
 
@@ -49,6 +50,7 @@ class SawyerClass(object):
 
     def __init__(self, PLANNING_GROUP="right_arm",
                  sub_pose_topic="/commander/pose",
+                 sub_pose_array_topic="/commander/pose_array",
                  sub_joint_state_topic="/commander/joint_state",
                  pub_topic="/test_topic"):
         '''creates subs pubs and moveit_commander groups'''
@@ -56,6 +58,9 @@ class SawyerClass(object):
         self.sub_pose = rospy.Subscriber(sub_pose_topic, Pose,
                                          self._moveit_pose_callback,
                                          queue_size=1)
+        self.sub_pose_array = rospy.Subscriber(sub_pose_array_topic, PoseArray,
+                                               self._moveit_pose_array_callback,
+                                               queue_size=1)
         self.sub_joint_state=rospy.Subscriber(sub_joint_state_topic,
                                               Float32MultiArray,
                                               self._moveit_joint_state_callback,
@@ -71,6 +76,22 @@ class SawyerClass(object):
         self.plan = self.group.plan()
         self.group.go()
         self.diagnostic.publish("future completion status message")
+
+    def _moveit_pose_array_callback(self, pose_array):
+        '''use an array of poses to creat waypoints for path plannner'''
+        waypoints = []
+        #print pose_array.poses[1]
+        #print len(pose_array.poses)
+        for i in range(len(pose_array.poses)):
+            waypoints.append(pose_array.poses[i])
+            print i
+
+        print "first"
+        print waypoints[0]
+        plan3 = self.group.plan(waypoints)
+        self.group.execute(plan3)
+        print "last:"
+        print waypoints[9]
 
     def _moveit_joint_state_callback(self, joint_states):
         '''joint state callback function'''
