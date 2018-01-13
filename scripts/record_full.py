@@ -61,25 +61,38 @@ class FullRecorder(object):
         If a file exists, the function will overwrite existing file.
         """
         if self._filename:
-            pose_right = ['PosX', 'PoseY', 'PoseZ', 'OrienX', 'OrienY', 'OrienZ', 'OrienW']
-
+            pose_right = ['PoseX', 'PoseY', 'PoseZ', 'OrienX', 'OrienY', 'OrienZ', 'OrienW']
+            joints_right = self._limb_right.joint_names()
             with open(self._filename, 'w') as f:
-                f.write('time, ')
-                f.write(', '.join([p for p in pose_right]) + '\n')
-
+                f.write('time,')
+                f.write(','.join([p for p in pose_right])+ ',')
+                f.write('right_gripper,')
+                f.write(','.join([j for j in joints_right]) + '\n')
                 while not self.done():
-
-                    pose_right = self._limb_right.endpoint_pose()
-                    pose_array = [0] *7
-                    pose_array[0] = pose_right['position'].x
-                    pose_array[1] = pose_right['position'].y
-                    pose_array[2] = pose_right['position'].z
-                    pose_array[3] = pose_right['orientation'].x
-                    pose_array[4] = pose_right['orientation'].y
-                    pose_array[5] = pose_right['orientation'].z
-                    pose_array[6] = pose_right['orientation'].w
-                    f.write("%f," % (self._time_stamp(),))
-                    f.write(','.join([str(x) for x in pose_array]) + '\n')
+                    if self._gripper:
+                        if self._cuff.upper_button():
+                            self._gripper.open()
+                        elif self._cuff.lower_button():
+                            self._gripper.close()
+                    if self._cuff.cuff_button():
+                        pose_right = self._limb_right.endpoint_pose()
+                        angles_right = [self._limb_right.joint_angle(j)
+                                        for j in joints_right]
+                        pose_array = [0] *7
+                        pose_array[0] = pose_right['position'].x
+                        pose_array[1] = pose_right['position'].y
+                        pose_array[2] = pose_right['position'].z
+                        pose_array[3] = pose_right['orientation'].x
+                        pose_array[4] = pose_right['orientation'].y
+                        pose_array[5] = pose_right['orientation'].z
+                        pose_array[6] = pose_right['orientation'].w
+                        f.write("%f, " % (self._time_stamp(),))
+                        f.write(', '.join([str(x) for x in pose_array]) + ', ')
+                        if self._gripper:
+                            f.write(str(self._gripper.get_position()) + ', ')
+                        else:
+                            f.write('0.0, ')
+                        f.write(', '.join([str(x) for x in angles_right]) + '\n')
 
                     self._rate.sleep()
 
@@ -125,7 +138,7 @@ def main():
     print("Enabling robot... ")
     rs.enable()
 
-    recorder = PoseRecorder(args.filename, args.record_rate)
+    recorder = FullRecorder(args.filename, args.record_rate)
     rospy.on_shutdown(recorder.stop)
 
 
