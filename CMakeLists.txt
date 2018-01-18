@@ -140,8 +140,8 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/test_moveit_node.cpp)
-add_executable(test_command_node src/test_command.cpp)
-target_link_libraries(test_command_node ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+# add_executable(test_command_node src/test_command.cpp)
+# target_link_libraries(test_command_node ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
