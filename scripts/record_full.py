@@ -27,6 +27,9 @@ class FullRecorder(object):
             self._gripper = None
             rospy.loginfo("No electric gripper detected.")
 
+
+        self._navigator = intera_interface.Navigator()
+
         if self._gripper:
             if self._gripper.has_error():
                 self._gripper.reboot()
@@ -63,11 +66,31 @@ class FullRecorder(object):
         if self._filename:
             pose_right = ['PoseX', 'PoseY', 'PoseZ', 'OrienX', 'OrienY', 'OrienZ', 'OrienW']
             joints_right = self._limb_right.joint_names()
+
+            constraints = [
+                {
+                    "name": "height",
+                    "button": "right_button_circle",
+                    "status": 0
+                },
+                {
+                    "name": "is_upright",
+                    "button": "right_button_square",
+                    "status": 0
+                }
+            ]
+
             with open(self._filename, 'w') as f:
                 f.write('time,')
-                f.write(','.join([p for p in pose_right])+ ',')
+                f.write(','.join([p for p in pose_right]) + ',')
                 f.write('right_gripper,')
-                f.write(','.join([j for j in joints_right]) + '\n')
+                f.write(','.join([j for j in joints_right]) + ',')
+                for idx, constraint in enumerate(constraints):
+                    if idx == len(constraints)-1:
+                        f.write(constraint["name"])
+                    else:
+                        f.write(constraint["name"] + ',')
+                f.write('\n')
                 while not self.done():
                     if self._gripper:
                         if self._cuff.upper_button():
@@ -78,7 +101,7 @@ class FullRecorder(object):
                         pose_right = self._limb_right.endpoint_pose()
                         angles_right = [self._limb_right.joint_angle(j)
                                         for j in joints_right]
-                        pose_array = [0] *7
+                        pose_array = [0] * 7
                         pose_array[0] = pose_right['position'].x
                         pose_array[1] = pose_right['position'].y
                         pose_array[2] = pose_right['position'].z
@@ -92,9 +115,18 @@ class FullRecorder(object):
                             f.write(str(self._gripper.get_position()) + ', ')
                         else:
                             f.write('0.0, ')
-                        f.write(', '.join([str(x) for x in angles_right]) + '\n')
-
+                        f.write(', '.join([str(x) for x in angles_right]))
+                        f.write(', ')
+                        for idx, constraint in enumerate(constraints):
+                            if self._navigator.get_button_state(constraint["button"]) != 0 and constraint["status"] == 0:
+                                constraint["status"] = 1
+                            if idx == len(constraints)-1:
+                                f.write(str(constraint["status"]))
+                            else:
+                                f.write(str(constraint["status"]) + ',')
+                        f.write('\n')
                     self._rate.sleep()
+
 
 def main():
     """Pose Recorder
