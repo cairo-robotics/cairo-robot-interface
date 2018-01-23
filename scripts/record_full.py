@@ -118,11 +118,12 @@ class FullRecorder(object):
                         f.write(', '.join([str(x) for x in angles_right]))
                         f.write(', ')
                         for idx, constraint in enumerate(constraints):
-                            if self._navigator.get_button_state(constraint["button"]) != 0 and constraint["status"] == 0:
+                            if self._navigator.get_button_state(constraint["button"]) != 0:
                                 constraint["status"] = 1
                             if idx == len(constraints)-1:
                                 f.write(str(constraint["status"]))
                             else:
+                                constraint["status"] = 0
                                 f.write(str(constraint["status"]) + ',')
                         f.write('\n')
                     self._rate.sleep()

@@ -7,8 +7,9 @@ import rospy
 import intera_interface
 from intera_interface import CHECK_VERSION
 
-class PoseRecorder(object):
-    def __init__(self, filename, rate, side="right"):
+
+class Recorder(object):
+    def __init__(self, filename, rate, configuration, side="right"):
         """
         Records joint data to a file at a specified rate.
         """
