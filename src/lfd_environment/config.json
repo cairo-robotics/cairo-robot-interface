@@ -1,0 +1,14 @@
+{
+
+    constraints: [
+        {
+            id:1,
+            name: "height",
+            interface: "cuff",
+            trigger: "right_button_circle"
+            eval: "lfd_predicate_classification.predicate_classifiers.height",
+            args: ["object_pose", "reference_heght", "threshold_angle"]
+
+        }
+    ]
+}
