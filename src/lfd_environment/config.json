@@ -1,14 +1,48 @@
 {
-
-    constraints: [
+    "constraints": [
         {
-            id:1,
-            name: "height",
-            interface: "cuff",
-            trigger: "right_button_circle"
-            eval: "lfd_predicate_classification.predicate_classifiers.height",
-            args: ["object_pose", "reference_heght", "threshold_angle"]
-
+            "class": "HeightConstraint",
+            "init_args" : 
+                {
+                    "id": 1,
+                    "item": 1,
+                    "button": "right_button_square",
+                    "reference_height": 0.0,
+                    "threshold_distance": 0.25
+                
+                }
+        },
+        {
+            "class": "UprightConstraint",
+            "init_args" : 
+                {
+                    "id": 2,
+                    "item": 1,
+                    "button": "right_button_circle",
+                    "threshold_angle": 10
+                }
         }
+    ],
+    "objects": [],
+    "robots": [
+        {
+            "class": "SawyerRobot",
+            "init_args":
+                {
+                    "id": 1,
+                    "upright_pose": 
+                        {
+                            "OrienW": -0.0148684388264,
+                            "OrienY": -0.0251494426806, 
+                            "OrienZ": -0.00709081777787, 
+                            "PoseX": 0.611348158919, 
+                            "PoseY": 0.570125597331, 
+                            "PoseZ": -0.053783346175
+                        }
+                }
+        }
+
     ]
+        
 }
+

@@ -1,81 +1,70 @@
-import rospy
-import intera_interface
-import abc
+import json
+from collections import OrderedDict
+from lfd_environment.constraints import UprightConstraint, HeightConstraint
+from lfd_environment.robot import SawyerRobot
+
+
+def import_configuration(filepath):
+        with open(filepath) as json_data:
+            return json.load(json_data, object_pairs_hook=OrderedDict)
 
 
 class Environment(object):
 
-    def __init__(self):
-        self.items
-        self.robot
-        self.constraints
-
-    def get_item_states(self):
-        items = []
-        for item in self.items:
-            item.append(item.get_state())
-        return items
-
-    def get_item_definitions(self):
-        pass
-
-
-class LFDItem(abc.ABC):
-
-    @abc.abstractmethod
-    def get_definition(self):
-        pass
-
-    @abc.abstractmethod
-    def get_state(self):
-        pass
-
-
-class ConstraintInterface(object):
-
-    def __init__(self, constraints):
-        self._navigator = intera_interface.Navigator()
+    def __init__(self, items, robot, constraints):
+        self.items = items
+        self.robot = robot
         self.constraints = constraints
 
-    def get_state(self):
-        state = {}
+    def get_robot_state(self):
+        return self.robot.get_state()
+
+    def get_item_states(self):
+        item_states = []
+        if self.items is not None:
+            for item in self.items:
+                item_states.append(item.get_state())
+        return item_states
+
+    def check_constraint_triggers(self):
+        triggered_constraints = []
         for constraint in self.constraints:
-            button_state = self._navigator.get_button_state(constraint["button"])
-            state[constraint["name"]] = 1 if button_state != 0 else 0
-        return state
+            result = constraint.check_trigger()
+            if result is not 0:
+                triggered_constraints.append(constraint.id)
+        return triggered_constraints
 
 
-class SawyerRobot(object):
+class RobotFactory(object):
 
-    def __init__(self, side="right"):
-        self._limb = intera_interface.Limb(side)
-        self._cuff = intera_interface.Cuff(side)
-        self._navigator = intera_interface.Navigator()
-        try:
-            self._gripper = intera_interface.Gripper(side)
-            rospy.loginfo("Electric gripper detected.")
-            if self._gripper.has_error():
-                rospy.loginfo("Gripper error...rebooting.")
-                self._gripper.reboot()
-            if not self._gripper.is_calibrated():
-                rospy.loginfo("Calibrating gripper.")
-                self._gripper.calibrate()
-        except Exception as e:
-            self._gripper = None
-            rospy.loginfo("No electric gripper detected.")
+    def __init__(self, robot_configs):
+        self.configs = robot_configs
+        self.classes = {
+            "SawyerRobot": SawyerRobot,
+        }
 
-    def get_state(self):
-        state = {}
-        joints_right = self._limb.joint_names()
-        pose_right = self._limb.endpoint_pose()
-        state['PoseX'] = pose_right['position'].x
-        state['PoseY'] = pose_right['position'].y
-        state['PoseZ'] = pose_right['position'].z
-        state['OrienX'] = pose_right['orientation'].x
-        state['OrienY'] = pose_right['orientation'].y
-        state['OrienZ'] = pose_right['orientation'].z
-        state['OrienW'] = pose_right['orientation'].w
-        state['gripper'] = self._gripper.get_position()
-        for j in joints_right:
-            state[j] = self._limb.joint_angle(j)
-        return state
+    def generate_robot_object(self):
+        objects = []
+        for config in self.configs:
+            objects.append(self.classes[config["class"]](*tuple(config["init_args"].values())))
+        return objects
+
+
+class ConstraintFactory(object):
+
+    def __init__(self, constraint_configs):
+        self.configs = constraint_configs
+        self.classes = {
+            "UprightConstraint": UprightConstraint,
+            "HeightConstraint": HeightConstraint
+        }
+
+    def import_configuration(self, filename):
+        with open(filename) as json_data:
+            self.constraints = json.load(json_data, object_pairs_hook=OrderedDict)["constraints"]
+
+    def generate_constraint_objects(self):
+        objects = []
+        for config in self.configs:
+            objects.append(self.classes[config["class"]](*tuple(config["init_args"].values())))
+        return objects
