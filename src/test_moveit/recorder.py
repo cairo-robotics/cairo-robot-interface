@@ -1,6 +1,5 @@
 import rospy
 import json
-from lfd_environment.interfaces import SawyerRobot, ConstraintInterface
 
 
 class Recorder(object):
@@ -14,18 +13,6 @@ class Recorder(object):
         self._rate = rospy.Rate(rate)
         self._start_time = rospy.get_time()
         self._done = False
-        self.constraints = [
-                {
-                    "name": "height",
-                    "button": "right_button_circle"
-                },
-                {
-                    "name": "is_upright",
-                    "button": "right_button_square"
-                }
-            ]
-        self.constraint_state = ConstraintInterface(self.constraints)
-        self.robot_state = SawyerRobot(side=side)
 
     def _time_stamp(self):
         return rospy.get_time() - self._start_time
@@ -44,7 +31,7 @@ class Recorder(object):
             self.stop()
         return self._done
 
-    def record_demonstration(self):
+    def record_demonstration(self, environment):
         """
         Records the current joint positions to a csv file if outputFilename was
         provided at construction this function will record the latest set of
@@ -52,6 +39,7 @@ class Recorder(object):
 
         If a file exists, the function will overwrite existing file.
         """
+        robot = environment.robot
 
         if self._filename:
             with open(self._filename, 'w') as f:
@@ -59,15 +47,15 @@ class Recorder(object):
                     "observations": []
                 }
                 while not self.done():
-                    if self.robot_state._gripper:
-                        if self.robot_state._cuff.upper_button():
-                            self.robot_state._gripper.open()
-                        elif self.robot_state._cuff.lower_button():
-                            self.robot_state._gripper.close()
+                    if robot._gripper:
+                        if robot._cuff.upper_button():
+                            robot._gripper.open()
+                        elif robot._cuff.lower_button():
+                            robot._gripper.close()
                     observation = {
                         "time": self._time_stamp(),
-                        "robot_state": self.robot_state.get_state_dict(),
-                        "constraint_state": self.constraint_state.get_state_dict()
+                        "robot_state": robot.get_state(),
+                        "triggered_constraints": environment.check_constraint_triggers()
                     }
                     demonstration["observations"].append(observation)
                     self._rate.sleep()

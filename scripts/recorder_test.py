@@ -5,6 +5,7 @@ import argparse
 import intera_interface
 from intera_interface import CHECK_VERSION
 from test_moveit.recorder import Recorder
+from lfd_environment.interfaces import Environment, RobotFactory, ConstraintFactory, import_configuration
 
 
 def main():
@@ -52,12 +53,23 @@ def main():
     recorder = Recorder(args.filename, args.record_rate)
     rospy.on_shutdown(recorder.stop)
 
+    config_filepath = "./src/sawyer_moveit_interface/src/lfd_environment/config.json"
+    configs = import_configuration(config_filepath)
 
+    robot_factory = RobotFactory(configs["robots"])
+    constraint_factory = ConstraintFactory(configs["constraints"])
+
+    robots = robot_factory.generate_robot_object()
+    constraints = constraint_factory.generate_constraint_objects()
+
+    # We only have just the one robot...for now.......
+    environment = Environment(items=None, robot=robots[0], constraints=constraints)
 
     print("Recording. Press Ctrl-C to stop.")
-    recorder.record_demonstration()
+    recorder.record_demonstration(environment)
 
     print("\nDone.")
+
 
 if __name__ == '__main__':
     main()
