@@ -1,14 +1,12 @@
 import rospy
-import json
-
+from lfd_environment.interfaces import Observation, Demonstration
 
 class Recorder(object):
 
-    def __init__(self, filename, rate, side="right"):
+    def __init__(self, rate, side="right"):
         """
         Records joint data to a file at a specified rate.
         """
-        self._filename = filename
         self._raw_rate = rate
         self._rate = rospy.Rate(rate)
         self._start_time = rospy.get_time()
@@ -41,22 +39,22 @@ class Recorder(object):
         """
         robot = environment.robot
 
-        if self._filename:
-            with open(self._filename, 'w') as f:
-                demonstration = {
-                    "observations": []
-                }
-                while not self.done():
-                    if robot._gripper:
-                        if robot._cuff.upper_button():
-                            robot._gripper.open()
-                        elif robot._cuff.lower_button():
-                            robot._gripper.close()
-                    observation = {
-                        "time": self._time_stamp(),
-                        "robot_state": robot.get_state(),
-                        "triggered_constraints": environment.check_constraint_triggers()
-                    }
-                    demonstration["observations"].append(observation)
-                    self._rate.sleep()
-                json.dump(demonstration, f,  indent=4, sort_keys=True)
+        observations = []
+
+        while not self.done():
+            if robot._gripper:
+                if robot._cuff.upper_button():
+                    robot._gripper.open()
+                elif robot._cuff.lower_button():
+                    robot._gripper.close()
+            data = {
+                "time": self._time_stamp(),
+                "robot": environment.get_robot_state(),
+                "items": environment.get_item_states(),
+                "triggered_constraints": environment.check_constraint_triggers()
+            }
+            observation = Observation(data)
+            observations.append(observation)
+            self._rate.sleep()
+        demo = Demonstration(observations)
+        return demo
