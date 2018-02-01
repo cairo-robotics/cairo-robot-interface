@@ -6,7 +6,10 @@ import intera_interface
 from intera_interface import CHECK_VERSION
 from test_moveit.recorder import Recorder
 from lfd_environment.interfaces import Environment, RobotFactory, ConstraintFactory, import_configuration
+from lfd_analysis.demonstration import applied_constraint_evaluator, evaluator, transition_point_identifier
 from lfd_data.io import DataExporter
+from functools import partial
+
 
 def main():
     """Pose Recorder
@@ -64,12 +67,16 @@ def main():
     # We only have just the one robot...for now.......
     environment = Environment(items=None, robot=robot, constraints=constraints)
 
-    exporter = DataExporter()
+    exp = DataExporter()
 
     print("Recording. Press Ctrl-C to stop.")
     demo = recorder.record_demonstration(environment)
+
+    applied_constraint_evaluator(demo, partial(evaluator, environment=environment))
+    transition_point_identifier(demo)
+
     raw_data = [obs.data for obs in demo.observations]
-    exporter.export_to_json(args.filename, raw_data)
+    exp.export_to_json(args.filename, raw_data)
 
     print("\nDone.")
 
