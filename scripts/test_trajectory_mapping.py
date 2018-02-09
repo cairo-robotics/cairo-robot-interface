@@ -5,10 +5,9 @@ import argparse
 import intera_interface
 from intera_interface import CHECK_VERSION
 from test_moveit.recorder import Recorder
-from lfd_environment.interfaces import Environment, RobotFactory, ConstraintFactory, import_configuration
-from lfd_analysis.demonstration import applied_constraint_evaluator, evaluator, transition_point_identifier
-from lfd_data.io import DataExporter
-from functools import partial
+from lfd_processor.interfaces import Environment, RobotFactory, ConstraintFactory, import_configuration
+from lfd_processor.analyzer import ConstraintAnalyzer
+from lfd_processor.io import DataExporter
 
 
 def main():
@@ -72,8 +71,9 @@ def main():
     print("Recording. Press Ctrl-C to stop.")
     demo = recorder.record_demonstration(environment)
 
-    applied_constraint_evaluator(demo, partial(evaluator, environment=environment))
-    transition_point_identifier(demo)
+    constrain_analyzer = ConstraintAnalyzer(environment)
+    constrain_analyzer.applied_constraint_evaluator(demo.observations)
+    constrain_analyzer.transition_point_identifier(demo.observations)
 
     raw_data = [obs.data for obs in demo.observations]
     exp.export_to_json(args.filename, raw_data)
