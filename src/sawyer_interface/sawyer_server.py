@@ -1,27 +1,7 @@
 #!/usr/bin/env python2
 '''
-TODO module description
-example_pose
-    pose_target.orientation.w = 0
-    pose_target.orientation.x = 0
-    pose_target.orientation.y = 1
-    pose_target.orientation.z = 0
-    pose_target.position.x = .8
-    pose_target.position.y = -.1
-    pose_target.position.z = .3
-
-    example joint state
-    group_variable_values[0] = -0.4
-    group_variable_values[1] = 1.053
-    group_variable_values[2] = -3.039
-    group_variable_values[3] = 2.1
-    group_variable_values[4] = -0.0856
-    group_variable_values[5] = 0.532
-    group_variable_values[6] = -0.646
+Sawyer class wrapper for creating various servers to send commands to sawyer
 '''
-#import sys
-import signal
-
 import rospy
 import moveit_commander
 
@@ -33,18 +13,9 @@ from std_msgs.msg import String
 from std_msgs.msg import Float32MultiArray
 
 
-class DeathNote(object):
-    '''DeathNote for exiting runaway loops'''
-    write_name = False
-    def __init__(self):
-        signal.signal(signal.SIGINT, self.ryuk)
-        signal.signal(signal.SIGTERM, self.ryuk)
 
-    def ryuk(self, signum, frame):
-        '''name written kill the loop'''
-        self.write_name = True
 
-class SawyerClass(object):
+class SawyerServer(object):
     '''creat various servers for reading in pose and joint data and moving
     sawyer accordingly'''
 
@@ -79,9 +50,8 @@ class SawyerClass(object):
 
     def _moveit_pose_array_callback(self, pose_array):
         '''use an array of poses to creat waypoints for path plannner'''
+        #TODO this still needs work
         waypoints = []
-        #print pose_array.poses[1]
-        #print len(pose_array.poses)
         for i in range(len(pose_array.poses)):
             waypoints.append(pose_array.poses[i])
             print i
@@ -145,20 +115,9 @@ def test():
     rospy.sleep(5)
     bender.group.go()
 
+
 def main():
-    '''creates node and pub sub when called main'''
-    #kill class
-    yagami = DeathNote()
-    print "hello world"
-    rospy.init_node('sawyer_commander')
-    bender = SawyerClass()
-
-    while(True):
-        if yagami.write_name: #execute death note
-            break
-    print "Hey, all it did was go around in a full circle."
-
-
+    print "run sawyer interface server.py"
 
 if __name__ == '__main__':
     main()
