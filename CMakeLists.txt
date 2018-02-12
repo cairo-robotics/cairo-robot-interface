@@ -8,6 +8,7 @@ add_compile_options(-std=c++11)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  std_msgs
   geometry_msgs
   moveit_msgs
   moveit_ros_planning_interface
@@ -19,8 +20,8 @@ find_package(catkin REQUIRED COMPONENTS
   tf
 )
 
+catkin_package()
 catkin_python_setup()
-
 
 ###########
 ## Build ##
@@ -39,5 +40,9 @@ target_link_libraries(forward_kinematic_server
                       ${catkin_LIBRARIES}
                       ${Boost_LIBRARIES})
 
+#TODO why won't my rosrun find you!?!?!?
 #install(TARGETS forward_kinematic_server RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 #install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+
+install(TARGETS forward_kinematic_server
+        RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

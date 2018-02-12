@@ -30,8 +30,6 @@ def main():
     with open(pkg_dir + '/std_poses/'+ pose_csv, 'r') as filestrm:
         for line in filestrm:
             crnt = line.split(',')
-            print crnt
-    print crnt[0]
     start_jpose = []
     for char in crnt:
         start_jpose.append(float(char))
