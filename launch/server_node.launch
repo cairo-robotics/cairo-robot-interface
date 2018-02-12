@@ -1,0 +1,7 @@
+
+<launch>
+  <node pkg="cairo_sawyer_interface" type="sawyer_interface_server.py"
+        name="sawyer_server" output="screen">
+        <param name="starting_pose" value="pose1.csv" />
+  </node>
+</launch>
