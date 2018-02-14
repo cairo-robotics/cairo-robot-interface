@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
   moveit_msgs
+  message_generation
   moveit_ros_planning_interface
   moveit_visual_tools
   roscpp
@@ -23,6 +24,10 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package()
 catkin_python_setup()
 
+add_service_files(
+  FILES
+  forward_kinematics.srv
+)
 ###########
 ## Build ##
 ###########
@@ -35,14 +40,18 @@ include_directories(include
 )
 
 ## forward kinematics server build ##
+add_executable(forward_kinematic_node src/forward_kinematic_node.cpp)
+target_link_libraries(forward_kinematic_node
+                      ${catkin_LIBRARIES}
+                      ${Boost_LIBRARIES})
+
 add_executable(forward_kinematic_server src/forward_kinematic_server.cpp)
 target_link_libraries(forward_kinematic_server
                       ${catkin_LIBRARIES}
                       ${Boost_LIBRARIES})
 
-#TODO why won't my rosrun find you!?!?!?
-#install(TARGETS forward_kinematic_server RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
-#install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+install(TARGETS forward_kinematic_node
+        RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 install(TARGETS forward_kinematic_server
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
