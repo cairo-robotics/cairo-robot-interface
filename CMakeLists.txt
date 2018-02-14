@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(cairo_sawyer_interface)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
+##c++11 required for moveit
 add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
@@ -18,10 +19,8 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   sensor_msgs
   shape_msgs
-  tf
 )
 
-catkin_package()
 catkin_python_setup()
 
 add_service_files(
@@ -32,23 +31,18 @@ add_service_files(
 ## Build ##
 ###########
 
-## Specify additional locations of header files
-## Your package locations should be listed before other locations
 include_directories(include
   ${catkin_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
 )
 
-## forward kinematics server build ##
 add_executable(forward_kinematic_node src/forward_kinematic_node.cpp)
 target_link_libraries(forward_kinematic_node
-                      ${catkin_LIBRARIES}
-                      ${Boost_LIBRARIES})
+                      ${catkin_LIBRARIES})
 
 add_executable(forward_kinematic_server src/forward_kinematic_server.cpp)
 target_link_libraries(forward_kinematic_server
-                      ${catkin_LIBRARIES}
-                      ${Boost_LIBRARIES})
+                      ${catkin_LIBRARIES})
 
 install(TARGETS forward_kinematic_node
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

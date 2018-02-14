@@ -47,6 +47,8 @@
 
 
 class SawyerFK{
+/* a class that creats an object with a callback function to transform from
+joint space to pose space using moveit and the swayer urdf */
 public:
   robot_model::RobotModelPtr kinematic_model;
   robot_state::RobotStatePtr kinematic_state2;
@@ -59,6 +61,7 @@ public:
 };
 
 SawyerFK::SawyerFK(ros::NodeHandle n){
+  //TODO constructor and initializations should be seperated
   //create pose publisher
   pub = n.advertise<geometry_msgs::Pose>("fk_pose", 1);
   //load the swayer model
@@ -74,6 +77,7 @@ SawyerFK::SawyerFK(ros::NodeHandle n){
 }
 
 void SawyerFK::callback(const std_msgs::Float32MultiArray::ConstPtr& msg){
+  //TODO remove from callback method and create jointToFK method
   //creat joint vector for incoming joint positions
   std::vector<double> position;
   //joint 0
@@ -100,13 +104,14 @@ void SawyerFK::callback(const std_msgs::Float32MultiArray::ConstPtr& msg){
   pose.orientation.y = Eigen::Quaterniond(end_effector_state.rotation()).y();
   pose.orientation.z = Eigen::Quaterniond(end_effector_state.rotation()).z();
   pose.orientation.w = Eigen::Quaterniond(end_effector_state.rotation()).w();
-  
+
   pub.publish(pose);
 }
 
 
 int main(int argc, char **argv)
 {
+  //TODO remove SawyerFK class from node file
   ros::init(argc, argv, "forward_kinematics_server");
   ros::NodeHandle n;
 

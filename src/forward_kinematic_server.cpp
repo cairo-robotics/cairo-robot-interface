@@ -7,11 +7,7 @@
 #include "std_msgs/Float32MultiArray.h"
 
 
-
-
 int main(int argc, char **argv){
   ros::init(argc, argv, "forward_kinematics_server");
   ros::NodeHandle n;
-
-
 }

@@ -1,9 +1,0 @@
-
-<launch>
-  <node pkg="cairo_sawyer_interface" type="forward_kinematic_node"
-        name="fk_server" output="screen">
-      </node>
-  <node pkg="cairo_sawyer_interface" type="sample_joint_pub.py"
-        name="sample_joint_pub" output="screen">
-      </node>
-</launch>

@@ -1,0 +1,9 @@
+<!-- creates cairo server and forward kinematics framework-->
+<launch>
+  <include file="$(find cairo_sawyer_interface)/launch/server_node.launch" />
+
+  <node pkg="cairo_sawyer_interface" type="forward_kinematic_node"
+        name="fk_server" output="screen">
+        <param name="starting_pose" value="upright_elbow_down.csv" />
+  </node>
+</launch>
