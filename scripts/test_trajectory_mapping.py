@@ -7,7 +7,7 @@ from intera_interface import CHECK_VERSION
 from test_moveit.recorder import Recorder
 from lfd_processor.interfaces import Environment, RobotFactory, ConstraintFactory, import_configuration
 from lfd_processor.analyzer import ConstraintAnalyzer
-from lfd_processor.io import DataExporter
+from lfd_processor.data_io import DataExporter
 
 
 def main():
@@ -54,7 +54,7 @@ def main():
     recorder = Recorder(args.record_rate)
     rospy.on_shutdown(recorder.stop)
 
-    config_filepath = "./src/sawyer_moveit_interface/scripts/config.json"
+    config_filepath = "./src/cairo_sawyer_interface/scripts/config.json"
     configs = import_configuration(config_filepath)
 
     robot_factory = RobotFactory(configs["robots"])
@@ -69,14 +69,17 @@ def main():
     exp = DataExporter()
 
     print("Recording. Press Ctrl-C to stop.")
-    demo = recorder.record_demonstration(environment)
+    demos = recorder.record_demonstrations(environment)
 
-    constrain_analyzer = ConstraintAnalyzer(environment)
-    constrain_analyzer.applied_constraint_evaluator(demo.observations)
-    constrain_analyzer.transition_point_identifier(demo.observations)
+    constraint_analyzer = ConstraintAnalyzer(environment)
+    for demo in demos:
+        constraint_analyzer.applied_constraint_evaluator(demo.observations)
+        constraint_analyzer.transition_point_identifier(demo.observations)
 
-    raw_data = [obs.data for obs in demo.observations]
-    exp.export_to_json(args.filename, raw_data)
+    exp = DataExporter()
+    for idx, demo in enumerate(demos):
+        raw_data = [obs.data for obs in demo.observations]
+        exp.export_to_json(args.directory + "/raw_demonstration{}.json".format(idx), raw_data)
 
     print("\nDone.")
 

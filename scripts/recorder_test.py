@@ -6,7 +6,7 @@ import intera_interface
 from intera_interface import CHECK_VERSION
 from test_moveit.recorder import Recorder
 from lfd_processor.interfaces import Environment, RobotFactory, ConstraintFactory, import_configuration
-from lfd_processor.io import DataExporter
+from lfd_processor.data_io import DataExporter
 
 def main():
     """Pose Recorder
