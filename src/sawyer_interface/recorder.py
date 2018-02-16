@@ -1,5 +1,5 @@
 import rospy
-from lfd_processor.interfaces import Observation, Demonstration
+from lfd_processor.environment import Observation, Demonstration
 
 
 class Recorder(object):
@@ -65,7 +65,6 @@ class Recorder(object):
                         demonstrations.append(Demonstration(observations))
                         rospy.loginfo("Demonstration captured!")
                         break
-            self._rate.sleep()
             if environment.robot._navigator.get_button_state("right_button_ok") == 2:
                 self.stop()
         return demonstrations
