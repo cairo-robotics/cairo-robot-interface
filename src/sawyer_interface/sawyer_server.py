@@ -4,15 +4,15 @@ Sawyer class wrapper for creating various servers to send commands to sawyer
 '''
 import rospy
 import moveit_commander
-
+import sys
 import moveit_msgs.msg
 import geometry_msgs.msg
 from geometry_msgs.msg import Pose
 from geometry_msgs.msg import PoseArray
 from std_msgs.msg import String
 from std_msgs.msg import Float32MultiArray
-
-
+from cairo_sawyer_interface.srv import ForwardKinematics
+from forward_kinematics.forward_kinematic_client import ForwardKinematicsClient
 
 
 class SawyerServer(object):
@@ -40,6 +40,7 @@ class SawyerServer(object):
         self.robot = moveit_commander.RobotCommander()
         self.scene = moveit_commander.PlanningSceneInterface()
         self.group = moveit_commander.MoveGroupCommander(PLANNING_GROUP)
+        self.fk_client = ForwardKinematicsClient()
 
     def _moveit_pose_callback(self, pose):
         '''pose callback function'''
@@ -78,6 +79,10 @@ class SawyerServer(object):
         '''set the pose target using the MoveGroupCommander'''
         self.group.set_pose_target(pose)
 
+    def set_joint_target(self, joints):
+        '''set the joint targets using the MoveGroupCommander'''
+        self.group.set_pose_target(pose)
+
     def plan(self):
         '''set the pose plan using the MoveGroupCommander'''
         self.plan = self.group.plan()
@@ -86,20 +91,45 @@ class SawyerServer(object):
         '''execute the plan using MoveGroupCommander'''
         self.group.execute(plan)
 
-    def move_pose(self, pose):
+    def move_to_planned_pose_target(self, pose):
         '''use pose to set target, plan, and execute'''
         self.set_pose_target(pose)
         self.plan()
         rospy.sleep(4)
         self.group.execute(self.plan)
 
+    def move_to__planned_joint_target(self, joints):
+        '''use pose to set target, plan, and execute'''
+        self.set_pose_target(pose)
+        self.plan()
+        self.group.execute(self.plan)
+
+    def get_end_effector_pose(self, joint_positions):
+        try:
+            joints = Float32MultiArray()
+            joints.data = point.positions
+            response = self.fk_service(joints)
+            return response
+        except rospy.ServiceException, e:
+            print "Service call failed: %s"%e
+
+    def get_plan_poses(self, plan):
+        end_effector_poses = []
+        for point in plan.joint_trajectory.points:
+            raw_pose = self.get_end_effector_pose(point.positions)
+            pose = {
+                "position": [x for x in raw_pose["position"]]
+                "orientation" = [x for x in raw_pose["orientation"]]
+            }
+            end_effector_poses.append(pose)
+        return end_effector_poses
 
 def test():
     '''testing new functionality NOT UNIT TEST'''
     rospy.init_node('sawyer_commander')
-    bender = SawyerClass()
+    bender = SawyerServer()
     bender.group.clear_pose_targets()
-    group_variable_values = [0.0] *7
+    group_variable_values = [0.0] * 7
     group_variable_values[0] = -0.4
     group_variable_values[1] = 1.0
     group_variable_values[2] = -3.0
@@ -111,13 +141,14 @@ def test():
 
     bender.group.set_joint_value_target(group_variable_values)
 
-    joint_plan = bender.plan()
-    rospy.sleep(5)
-    bender.group.go()
+    bender.plan()
+    bender.get_plan_end_effector_poses(bender.plan)
+    print(bender.plan.joint_trajectory.points)
+    # bender.group.go()
 
 
 def main():
     print "run sawyer interface server.py"
 
 if __name__ == '__main__':
-    main()
+    test()
