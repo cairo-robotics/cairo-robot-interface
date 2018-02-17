@@ -23,29 +23,49 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_python_setup()
 
+## Generate services in the 'srv' folder
 add_service_files(
   FILES
-  forward_kinematics.srv
+  ForwardKinematics.srv
 )
+
+## Generate added messages and services with any dependencies listed here
+generate_messages(
+  DEPENDENCIES
+  std_msgs  # Or other packages containing msgs
+  geometry_msgs
+)
+
+catkin_package(
+  INCLUDE_DIRS include
+  CATKIN_DEPENDS 
+    roscpp
+    message_runtime
+ )
+
 ###########
 ## Build ##
 ###########
 
-include_directories(include
+include_directories(
+  include
   ${catkin_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
 )
 
-add_executable(forward_kinematic_node src/forward_kinematic_node.cpp)
-target_link_libraries(forward_kinematic_node
-                      ${catkin_LIBRARIES})
+add_library(forward_kinematics ${PROJECT_SOURCE_DIR}/src/forward_kinematics/forward_kinematics.cpp)
+target_link_libraries(forward_kinematics ${catkin_LIBRARIES})
 
-add_executable(forward_kinematic_server src/forward_kinematic_server.cpp)
-target_link_libraries(forward_kinematic_server
-                      ${catkin_LIBRARIES})
+add_executable(forward_kinematics_node ${PROJECT_SOURCE_DIR}/src/forward_kinematics/forward_kinematics_node.cpp)
+add_dependencies(forward_kinematics_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(forward_kinematics_node ${catkin_LIBRARIES})
 
-install(TARGETS forward_kinematic_node
+add_executable(forward_kinematics_service ${PROJECT_SOURCE_DIR}/src/forward_kinematics/forward_kinematics_service.cpp)
+add_dependencies(forward_kinematics_service ${catkin_EXPORTED_TARGETS})
+target_link_libraries(forward_kinematics_service forward_kinematics)
+
+install(TARGETS forward_kinematics_node
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
-install(TARGETS forward_kinematic_server
+install(TARGETS forward_kinematics_service
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
