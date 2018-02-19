@@ -6,7 +6,7 @@ from cairo_sawyer_interface.srv import ForwardKinematics
 from std_msgs.msg import Float32MultiArray
 
 
-class FowardKinematicsClient():
+class ForwardKinematicsClient():
 
     def __init__(self):
         rospy.wait_for_service('forward_kinematic_service', timeout = 5)
