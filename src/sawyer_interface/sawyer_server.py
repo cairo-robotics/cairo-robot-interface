@@ -5,14 +5,13 @@ Sawyer class wrapper for creating various servers to send commands to sawyer
 import rospy
 import moveit_commander
 import sys
-import moveit_msgs.msg
-import geometry_msgs.msg
-from geometry_msgs.msg import Pose
-from geometry_msgs.msg import PoseArray
+from geometry_msgs.msg import Pose, PoseArray
+from moveit_msgs.msg import RobotState
+from sensor_msgs.msg import JointState
 from std_msgs.msg import String
 from std_msgs.msg import Float32MultiArray
 from cairo_sawyer_interface.srv import ForwardKinematics
-from forward_kinematics.forward_kinematic_client import ForwardKinematicsClient
+from forward_kinematics.forward_kinematics_client import ForwardKinematicsClient
 
 
 class SawyerServer(object):
@@ -32,10 +31,10 @@ class SawyerServer(object):
         self.sub_pose_array = rospy.Subscriber(sub_pose_array_topic, PoseArray,
                                                self._moveit_pose_array_callback,
                                                queue_size=1)
-        self.sub_joint_state=rospy.Subscriber(sub_joint_state_topic,
-                                              Float32MultiArray,
-                                              self._moveit_joint_state_callback,
-                                              queue_size=1)
+        self.sub_joint_state = rospy.Subscriber(sub_joint_state_topic,
+                                                Float32MultiArray,
+                                                self._moveit_joint_state_callback,
+                                                queue_size=1)
         self.diagnostic = rospy.Publisher(pub_topic, String, queue_size=1)
         self.robot = moveit_commander.RobotCommander()
         self.scene = moveit_commander.PlanningSceneInterface()
@@ -72,63 +71,72 @@ class SawyerServer(object):
         self.group.go()
         self.diagnostic.publish("future completion status message")
 
+    def set_joint_start(self, joint_position):
+        joint_state = JointState()
+        joint_state.header = Header()
+        joint_state.header.stamp = rospy.Time.now()
+        joint_state.name = ['right_j0', 'right_j1', 'right_j2', 'right_j3', 'right_j4', 'right_j5', 'right_j6']
+        joint_state.position = joint_positions
+        moveit_robot_state = RobotState()
+        moveit_robot_state.joint_state = joint_state
+        self.group.set_start_state(moveit_robot_state)
 
-    #added methods b/c unable to inherit moveit_commander to sawyer_class
-    #TODO find a better way? my guess is that there multiple classes to inherit
     def set_pose_target(self, pose):
         '''set the pose target using the MoveGroupCommander'''
         self.group.set_pose_target(pose)
 
     def set_joint_target(self, joints):
         '''set the joint targets using the MoveGroupCommander'''
-        self.group.set_pose_target(pose)
+        self.group.set_joint_value_target(joints)
 
     def plan(self):
         '''set the pose plan using the MoveGroupCommander'''
-        self.plan = self.group.plan()
+        return self.group.plan()
 
-    def execute(self):
+    def execute(self, plan):
         '''execute the plan using MoveGroupCommander'''
         self.group.execute(plan)
 
-    def move_to_planned_pose_target(self, pose):
+    def move_to_pose_target(self, pose):
         '''use pose to set target, plan, and execute'''
         self.set_pose_target(pose)
-        self.plan()
-        rospy.sleep(4)
-        self.group.execute(self.plan)
+        plan = self.plan()
+        self.group.execute(plan)
 
-    def move_to__planned_joint_target(self, joints):
-        '''use pose to set target, plan, and execute'''
-        self.set_pose_target(pose)
-        self.plan()
-        self.group.execute(self.plan)
+    def move_to_joint_target(self, joints):
+        '''use joints to set target, plan, and execute'''
+        self.set_joint_target(joints)
+        plan = self.plan()
+        self.group.execute(plan)
 
     def get_end_effector_pose(self, joint_positions):
         try:
             joints = Float32MultiArray()
-            joints.data = point.positions
-            response = self.fk_service(joints)
+            joints.data = joint_positions
+            response = self.fk_client.call(joints)
             return response
         except rospy.ServiceException, e:
             print "Service call failed: %s"%e
 
-    def get_plan_poses(self, plan):
-        end_effector_poses = []
+    def convert_plan_to_dict(self, plan):
+        plan_dicts = []
         for point in plan.joint_trajectory.points:
-            raw_pose = self.get_end_effector_pose(point.positions)
-            pose = {
-                "position": [x for x in raw_pose["position"]]
-                "orientation" = [x for x in raw_pose["orientation"]]
+            pose = self.get_end_effector_pose(point.positions)
+            position = pose.position
+            orientation = pose.orientation
+            data = {
+                "joints": point.positions, 
+                "position": [position.x, position.y, position.z],
+                "orientation": [orientation.x, orientation.y, orientation.z, orientation.w]
             }
-            end_effector_poses.append(pose)
-        return end_effector_poses
+            plan_dicts.append(data)
+        return plan_dicts
 
 def test():
     '''testing new functionality NOT UNIT TEST'''
     rospy.init_node('sawyer_commander')
-    bender = SawyerServer()
-    bender.group.clear_pose_targets()
+    sawyer = SawyerServer()
+    sawyer.group.clear_pose_targets()
     group_variable_values = [0.0] * 7
     group_variable_values[0] = -0.4
     group_variable_values[1] = 1.0
@@ -139,11 +147,11 @@ def test():
     group_variable_values[6] = -1
     #group_variable_values[7] = -0.0416
 
-    bender.group.set_joint_value_target(group_variable_values)
+    sawyer.group.set_joint_value_target(group_variable_values)
+    sawyer.plan()
+    for entry in sawyer.convert_plan_to_dict(sawyer.plan):
+        print entry
 
-    bender.plan()
-    bender.get_plan_end_effector_poses(bender.plan)
-    print(bender.plan.joint_trajectory.points)
     # bender.group.go()
 
 
