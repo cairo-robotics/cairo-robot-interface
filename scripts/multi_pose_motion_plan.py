@@ -32,21 +32,32 @@ def main():
 
     sawyer = SawyerMoveitInterface()
 
-    end_pose = [
-        0.6348590496413895,
-        0.12485524636261497,
-        0.19661005101541001,
-        0.9993962837780159,
-        0.004024747130915506,
-        -0.034228490820403086,
-        -0.004390876607434143]
-    sawyer.move_to_pose_target(end_pose)
-    print sawyer.robot.get_current_state()
-    end_joints = sawyer.get_pose_IK_joints(end_pose)
-    sawyer.move_to_joint_target(end_joints)
-
-    print end_joints
-    print sawyer.checkPointValidity(end_joints)
+    pose1 = [
+        0.6949347211914496,
+        -0.5413202179320513,
+        0.3014203901950048,
+        0.9416077155400848,
+        -0.335109159155727,
+        0.022714612387440658,
+        0.02368138233746421]
+    pose2 = [
+        0.737768633028777,
+        -0.20838165935163705,
+        0.08693570083579126,
+        0.942718170265355,
+        -0.3322233875202301,
+        0.02316207641159948,
+        0.019328488105065017]
+    pose3 = [
+        0.7032578539410487,
+        0.25775339686828397,
+        0.09149120266495979,
+        0.9436094934555694,
+        -0.32990025449253385,
+        0.022422331235321512,
+        0.01625376904779616]
+    poses = [pose1, pose2, pose3, pose2, pose1]
+    sawyer.move_to_pose_targets(poses)
 
 if __name__ == '__main__':
     main()

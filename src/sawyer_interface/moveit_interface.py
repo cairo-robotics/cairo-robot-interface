@@ -106,6 +106,13 @@ class SawyerMoveitInterface(object):
         plan = self.plan()
         self.group.execute(plan)
 
+    def move_to_pose_targets(self, poses):
+        '''use poses to set targets, plan, and execute'''
+        for pose in poses:
+            self.set_pose_target(pose)
+            plan = self.plan()
+            self.group.execute(plan)
+
     def move_to_joint_target(self, joints):
         '''use joints to set target, plan, and execute'''
         self.set_joint_target(joints)
@@ -122,13 +129,12 @@ class SawyerMoveitInterface(object):
     def get_pose_IK_joints(self, pose_vector):
         pose = Pose()
         pose.position.x = pose_vector[0]
-        pose.position.y =  pose_vector[1]
-        pose.position.z =  pose_vector[2]
+        pose.position.y = pose_vector[1]
+        pose.position.z = pose_vector[2]
         pose.orientation.x = pose_vector[3]
         pose.orientation.y = pose_vector[4]
         pose.orientation.z = pose_vector[5]
         pose.orientation.w = pose_vector[6]
-        print(pose)
         try:
             pose_stamped = PoseStamped()
             pose_stamped.header = Header()
@@ -137,9 +143,12 @@ class SawyerMoveitInterface(object):
             pose_stamped.pose = pose
             response = self.ik_server.call(pose_stamped)
             # Caveat: No joints are returned if the Pose is within a collision object, which iteself is a from
-            # of validation.
+            # of validation
             p = response.solution.joint_state.position
-            return [p[1], p[2], p[3], p[4], p[5], p[6]]
+            if len(p) != 0:
+                return [p[0], p[2], p[3], p[4], p[5], p[6], p[7]]
+            else:
+                return []
         except rospy.ServiceException, e:
             print "Service call failed: %s" % e
 
@@ -158,9 +167,6 @@ class SawyerMoveitInterface(object):
         return plan_dicts
 
     def checkPointValidity(self, joint_positions, groups=[]):
-        """Given a robot trajectory, deduce it's groups and check it's validity on each point of the traj
-        returns True if valid, False otherwise
-        It's considered not valid if any point is not valid"""
         state = RobotState()
         state.joint_state.name = ['right_j0', 'right_j1', 'right_j2', 'right_j3', 'right_j4', 'right_j5', 'right_j6']
         state.joint_state.position = joint_positions
