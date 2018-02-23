@@ -8,11 +8,11 @@ import rospkg
 import rosparam
 import signal
 
-from sawyer_interface.sawyer_server import SawyerServer
+from sawyer_interface.moveit_interface import  SawyerMoveitInterface
 
 def main():
     #TODO better name than bender commander?
-    bender = SawyerServer()
+    bender =  SawyerMoveitInterface()
     rospy.init_node('bender_commander')
 
     #loader for start pose
