@@ -10,7 +10,6 @@ from moveit_msgs.srv import GetStateValidity, GetStateValidityRequest
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Header, String, Float32MultiArray
 from cairo_sawyer_interface.srv import ForwardKinematics
-# from forward_kinematics.forward_kinematics_client import ForwardKinematicsClient
 from kinematics_interface.servers import ForwardKinematicsServer, InverseKinematicsServer, RobotStateValidityServer
 
 
@@ -39,7 +38,6 @@ class SawyerMoveitInterface(object):
         self.robot = moveit_commander.RobotCommander()
         self.scene = moveit_commander.PlanningSceneInterface()
         self.group = moveit_commander.MoveGroupCommander(PLANNING_GROUP)
-        # self.fk_client = ForwardKinematicsClient()
         self.fk_server = ForwardKinematicsServer()
         self.ik_server = InverseKinematicsServer()
         self.rs_validity = RobotStateValidityServer()
@@ -73,6 +71,12 @@ class SawyerMoveitInterface(object):
         self.group.set_joint_value_target(joint_states.data)
         self.group.go()
         self.diagnostic.publish("future completion status message")
+
+    def set_velocity_scaling(self, velocity_scaling):
+        self.group.set_max_velocity_scaling_factor(velocity_scaling)
+
+    def set_acceleration_scaling(self, acceleration_scaling):
+        self.group.set_max_acceleration_scaling_factor(acceleration_scaling)
 
     def set_joint_start(self, joint_positions):
         joint_state = JointState()
@@ -113,6 +117,13 @@ class SawyerMoveitInterface(object):
             plan = self.plan()
             self.group.execute(plan)
 
+    def move_to_joint_targets(self, joint_list):
+        '''use joint configurations to set targets, plan, and execute'''
+        for joints in joint_list:
+            self.set_joint_target(joints)
+            plan = self.plan()
+            self.group.execute(plan)
+
     def move_to_joint_target(self, joints):
         '''use joints to set target, plan, and execute'''
         self.set_joint_target(joints)
@@ -123,6 +134,32 @@ class SawyerMoveitInterface(object):
         try:
             response = self.fk_server.call(joint_positions)
             return response.pose_stamped[0].pose
+        except rospy.ServiceException, e:
+            print "Service call failed: %s" % e
+
+    def get_joints_FK_pose(self, pose_vector):
+        pose = Pose()
+        pose.position.x = pose_vector[0]
+        pose.position.y = pose_vector[1]
+        pose.position.z = pose_vector[2]
+        pose.orientation.x = pose_vector[3]
+        pose.orientation.y = pose_vector[4]
+        pose.orientation.z = pose_vector[5]
+        pose.orientation.w = pose_vector[6]
+        try:
+            pose_stamped = PoseStamped()
+            pose_stamped.header = Header()
+            pose_stamped.header.frame_id = "/base"
+            pose_stamped.header.stamp = rospy.Time.now()
+            pose_stamped.pose = pose
+            response = self.ik_server.call(pose_stamped)
+            # Caveat: No joints are returned if the Pose is within a collision object, which iteself is a from
+            # of validation
+            p = response.solution.joint_state.position
+            if len(p) != 0:
+                return [p[0], p[2], p[3], p[4], p[5], p[6], p[7]]
+            else:
+                return []
         except rospy.ServiceException, e:
             print "Service call failed: %s" % e
 
@@ -171,8 +208,7 @@ class SawyerMoveitInterface(object):
         state.joint_state.name = ['right_j0', 'right_j1', 'right_j2', 'right_j3', 'right_j4', 'right_j5', 'right_j6']
         state.joint_state.position = joint_positions
         result = self.rs_validity.call(state, "right_arm")
-        if not result.valid:
-            rospy.logwarn("The following state is invalid:\n" + str(state) )
+        if result is not None and not result.valid:
             return False
         else:
             return True
