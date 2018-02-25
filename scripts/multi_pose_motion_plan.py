@@ -73,8 +73,17 @@ def combine_plans(plan1, plan2):
     points_1 = plan1.joint_trajectory.points
     points_2 = plan1.joint_trajectory.points
     end_1 = points_1[-1]
-    print points_1[-1]
+    start_2 = points_2[1]
+    end = (end_1.time_from_start.secs, end_1.time_from_start.nsecs)
+    start = (start_2.time_from_start.secs, start_2.time_from_start.nsecs)
+    print end
+    print 
+    print start
+    print
+    seconds = end[0] + start[0]
+    end = end[1] + start[1]
 
+    nano = 1000000000
 
 if __name__ == '__main__':
     main()
