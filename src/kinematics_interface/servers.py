@@ -2,7 +2,7 @@ import rospy
 from moveit_msgs.srv import GetPositionFK, GetPositionFKRequest, GetPositionIK, \
                             GetPositionIKRequest, GetStateValidity, GetStateValidityRequest
 from geometry_msgs.msg import PoseStamped
-
+from rospy.service import ServiceException
 
 class ForwardKinematicsServer():
     def __init__(self):
@@ -126,5 +126,9 @@ class RobotStateValidityServer():
         request = GetStateValidityRequest()
         request.robot_state = robot_state
         request.group_name = group_name
-        response = self.service.call(request)
-        return response
+        try:
+            response = self.service.call(request)
+            return response
+        except ServiceException as e:
+            rospy.logwarn(e)
+            return None

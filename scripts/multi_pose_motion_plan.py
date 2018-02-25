@@ -57,7 +57,24 @@ def main():
         0.022422331235321512,
         0.01625376904779616]
     poses = [pose1, pose2, pose3, pose2, pose1]
-    sawyer.move_to_pose_targets(poses)
+    
+    plans = []
+    for pose in poses:
+        sawyer.set_pose_target(pose)
+        plans.append(sawyer.plan())
+
+    # for plan in plans:
+
+    #     print plan.joint_trajectory.points
+
+    combine_plans(plans[0], plans[1])
+
+def combine_plans(plan1, plan2):
+    points_1 = plan1.joint_trajectory.points
+    points_2 = plan1.joint_trajectory.points
+    end_1 = points_1[-1]
+    print points_1[-1]
+
 
 if __name__ == '__main__':
     main()
