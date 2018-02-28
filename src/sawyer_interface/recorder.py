@@ -45,7 +45,7 @@ class Recorder(object):
         while not self.done():
             observations = []
             if environment.robot._navigator.get_button_state("right_button_ok") == 1:
-                rospy.loginfo("Caputing new demonstration.")
+                rospy.loginfo("RECORDING.")
                 while True:
                     if robot._gripper:
                         if robot._cuff.upper_button():
@@ -63,7 +63,7 @@ class Recorder(object):
                     self._rate.sleep()
                     if environment.robot._navigator.get_button_state("right_button_ok") == 3:
                         demonstrations.append(Demonstration(observations))
-                        rospy.loginfo("Demonstration captured!")
+                        rospy.loginfo("~~~CAPTURED~~~")
                         break
             if environment.robot._navigator.get_button_state("right_button_ok") == 2:
                 self.stop()
