@@ -1,2 +1,1 @@
-# node for interfacing with Sawyer 
-subscribes too /commander/pose
+# Wrapper Interface for Using ReThinks Robotics Sawyer Ineterface
