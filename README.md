@@ -1,1 +1,1 @@
-# Wrapper Interface for Using ReThinks Robotics Sawyer Ineterface
+# Wrapper for Interfacing with ReThink Robotics Sawyer SDK
