@@ -90,15 +90,6 @@ class SawyerMoveitInterface(AbstractMoveitInterface):
             plan = self.plan()
             self.execute(plan)
 
-    # def get_FK_pose(self,
-    #                 joint_positions,
-    #                 joint_names=['right_j0', 'right_j1', 'right_j2', 'right_j3', 'right_j4', 'right_j5', 'right_j6'],
-    #                 tip_names=["right_hand"]):
-    #     return self.fk_server.call(joint_positions, joint_names=joint_names, tip_names=tip_names)
-
-    # def get_IK_pose(self, pose, tip_name="/right_hand", limb="left", use_advanced_options=False):
-    #     return self.ik_server.call(pose, tip_name=tip_name, limb=limb, use_advanced_options=use_advanced_options)
-
     def get_FK_pose(self, joint_positions):
         return self.fk_server.call(joint_positions)
 
