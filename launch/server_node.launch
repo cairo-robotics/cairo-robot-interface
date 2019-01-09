@@ -1,7 +1,0 @@
-<!-- creates only the cairo server interface-->
-<launch>
-  <node pkg="cairo_sawyer_interface" type="sawyer_interface_server.py"
-        name="sawyer_server" output="screen">
-        <param name="starting_pose" value="upright_elbow_down.csv" />
-  </node>
-</launch>
