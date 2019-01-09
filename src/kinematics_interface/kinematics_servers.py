@@ -267,3 +267,36 @@ class MoveItInverseKinematicsServer():
         response = self.service.call(request)
         rospy.logwarn("Sent: " + str(request))
         return response
+
+class RobotStateValidityServer(AbstractROSServer):
+    def __init__(self):
+        self.service = rospy.ServiceProxy("/check_state_validity", GetStateValidity)
+        rospy.loginfo("Connecting to State Validity service")
+        self.service.wait_for_service()
+
+    def close(self):
+        self.sv_srv.close()
+
+    def call(self, robot_state, group_name="right_arm"):
+        """
+        Given a robot state and a group name, caluclate whether or not the state is valid.
+        Parameters
+        ----------
+        robot_state : RobotState
+            RobotState msg for which to check validity.
+        group_name : string
+            Name of the group (ex: "right_arm") on which to check for validity.
+        Returns
+        -------
+        response : GetStateValidityResponse
+            The GetStateValidityResponse response from the /check_state_validity service
+        """
+        request = GetStateValidityRequest()
+        request.robot_state = robot_state
+        request.group_name = group_name
+        try:
+            response = self.service.call(request)
+            return response
+        except ServiceException as e:
+            rospy.logwarn(e)
+            return None
