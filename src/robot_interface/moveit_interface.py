@@ -58,9 +58,13 @@ class SawyerMoveitInterface(AbstractMoveitInterface):
         '''creates subs pubs and moveit_commander groups'''
         super(AbstractMoveitInterface, self).__init__()
         self.group = moveit_commander.MoveGroupCommander(planning_group)
+        self.robot = moveit_commander.RobotCommander()
         self.fk_server = MoveItForwardKinematicsServer()
         self.ik_server = MoveItInverseKinematicsServer()
         self.rs_validity = RobotStateValidityServer()
+
+    def get_robot_state(self):
+        return self.robot.get_current_state()
 
     def set_velocity_scaling(self, velocity_scaling):
         self.group.set_max_velocity_scaling_factor(velocity_scaling)
