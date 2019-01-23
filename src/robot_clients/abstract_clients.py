@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 
-class AbstractROSServer():
+class AbstractROSClient():
     __metaclass__ = ABCMeta
 
     @abstractmethod

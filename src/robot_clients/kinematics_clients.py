@@ -1,5 +1,5 @@
 import rospy
-from servers.abstract_servers import AbstractROSServer
+from robot_clients.abstract_clients import AbstractROSClient
 from moveit_msgs.srv import GetPositionFK, GetPositionFKRequest, GetPositionIK, \
                             GetPositionIKRequest, GetStateValidity, GetStateValidityRequest
 from rospy.service import ServiceException
@@ -20,7 +20,7 @@ from intera_core_msgs.srv import (
 )
 
 
-class SawyerForwardKinematicsServer(AbstractROSServer):
+class SawyerForwardKinematicsClient(AbstractROSClient):
     def __init__(self, limb="right"):
         self.ns = "ExternalTools/" + limb + "/PositionKinematicsNode/FKService"
         self.service = rospy.ServiceProxy(self.ns, SolvePositionFK)
@@ -81,7 +81,7 @@ class SawyerForwardKinematicsServer(AbstractROSServer):
         return resp.pose_stamp[0].pose
 
 
-class SawyerInverseKinematicsServer(AbstractROSServer):
+class SawyerInverseKinematicsClient(AbstractROSClient):
     def __init__(self, ):
         self.service = rospy.ServiceProxy("/compute_ik", GetPositionIK)
         rospy.loginfo("Connecting to Inverse Kinematics service.")
@@ -167,7 +167,7 @@ class SawyerInverseKinematicsServer(AbstractROSServer):
             return resp
 
 
-class MoveItForwardKinematicsServer():
+class MoveItForwardKinematicsClient(AbstractROSClient):
     def __init__(self):
         self.service = rospy.ServiceProxy("/compute_fk", GetPositionFK)
         rospy.loginfo("Connecting to Forward Kinematics service.")
@@ -208,7 +208,7 @@ class MoveItForwardKinematicsServer():
         return response.pose_stamped[0].pose
 
 
-class MoveItInverseKinematicsServer():
+class MoveItInverseKinematicsClient(AbstractROSClient):
     def __init__(self):
         self.service = rospy.ServiceProxy("/compute_ik", GetPositionIK)
         rospy.loginfo("Connecting to Inverse Kinematics service.")
@@ -254,7 +254,8 @@ class MoveItInverseKinematicsServer():
         rospy.logwarn("Sent: " + str(request))
         return response
 
-class RobotStateValidityServer(AbstractROSServer):
+
+class RobotStateValidityClient(AbstractROSServer):
     def __init__(self):
         self.service = rospy.ServiceProxy("/check_state_validity", GetStateValidity)
         rospy.loginfo("Connecting to State Validity service")
