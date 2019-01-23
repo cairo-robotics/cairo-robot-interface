@@ -3,7 +3,7 @@ from distutils.core import setup
 from catkin_pkg.python_setup import generate_distutils_setup
 
 d = generate_distutils_setup()
-d['packages'] = ['robot_interface', "forward_kinematics", "kinematics_interface"]
+d['packages'] = ['robot_interface', "robot_clients", "robot_servers"]
 d['package_dir'] = {'': 'src'}
 
 setup(**d)
