@@ -1,7 +1,5 @@
 import rospy
-from abc import ABCMeta, abstractmethod
-# from moveit_msgs.srv import GetPositionFK, GetPositionIK, \
-#                             GetStateValidity, GetStateValidityRequest
+from servers.abstract_servers import AbstractROSServer
 from moveit_msgs.srv import GetPositionFK, GetPositionFKRequest, GetPositionIK, \
                             GetPositionIKRequest, GetStateValidity, GetStateValidityRequest
 from rospy.service import ServiceException
@@ -20,18 +18,6 @@ from intera_core_msgs.srv import (
     SolvePositionFK,
     SolvePositionFKRequest
 )
-
-
-class AbstractROSServer():
-    __metaclass__ = ABCMeta
-
-    @abstractmethod
-    def close():
-        pass
-
-    @abstractmethod
-    def call():
-        pass
 
 
 class SawyerForwardKinematicsServer(AbstractROSServer):
