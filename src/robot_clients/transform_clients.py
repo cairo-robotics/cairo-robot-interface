@@ -41,7 +41,7 @@ class TransformLookupClient(AbstractROSClient):
             return resp.transform
         except (rospy.ServiceException, rospy.ROSException), e:
             rospy.logerr("Service call failed: %s" % (e,))
-            return False
+            return TransformStamped()
 
         if resp.error.error_string is not None:
             rospy.logwarn("Transform lookup failed: %s" % (e,))

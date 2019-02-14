@@ -3,7 +3,7 @@ import moveit_commander
 from moveit_msgs.msg import RobotState
 from sensor_msgs.msg import JointState
 import rospy
-from kinematics_interface.kinematics_servers import MoveItForwardKinematicsServer, MoveItInverseKinematicsServer, RobotStateValidityServer
+from robot_clients.kinematics_clients import MoveItForwardKinematicsClient, MoveItInverseKinematicsClient, RobotStateValidityClient
 
 
 class AbstractMoveitInterface:
@@ -59,9 +59,9 @@ class SawyerMoveitInterface(AbstractMoveitInterface):
         super(AbstractMoveitInterface, self).__init__()
         self.group = moveit_commander.MoveGroupCommander(planning_group)
         self.robot = moveit_commander.RobotCommander()
-        self.fk_server = MoveItForwardKinematicsServer()
-        self.ik_server = MoveItInverseKinematicsServer()
-        self.rs_validity = RobotStateValidityServer()
+        self.fk_client = MoveItForwardKinematicsClient()
+        self.ik_client = MoveItInverseKinematicsClient()
+        self.rsv_client = RobotStateValidityClient()
 
     def get_robot_state(self):
         return self.robot.get_current_state()
@@ -95,16 +95,16 @@ class SawyerMoveitInterface(AbstractMoveitInterface):
             self.execute(plan)
 
     def get_FK_pose(self, joint_positions):
-        return self.fk_server.call(joint_positions)
+        return self.fk_client.call(joint_positions)
 
     def get_IK_pose(self, pose):
-        return self.ik_server.call(pose)
+        return self.ik_client.call(pose)
 
     def check_point_validity(self, robot_state, group_name="right_arm"):
         if type(robot_state) is not RobotState:
             rospy.logerror("check_point_validity expects a RobotState message to check point validity.")
             return None
-        return self.rs_validity.call(robot_state, group_name=group_name)
+        return self.rsv_client.call(robot_state, group_name=group_name)
 
     def create_robot_state(self, joints, joint_names=['right_j0', 'right_j1', 'right_j2', 'right_j3', 'right_j4', 'right_j5', 'right_j6']):
         robot_state = RobotState()

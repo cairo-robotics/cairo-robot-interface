@@ -255,7 +255,7 @@ class MoveItInverseKinematicsClient(AbstractROSClient):
         return response
 
 
-class RobotStateValidityClient(AbstractROSServer):
+class RobotStateValidityClient(AbstractROSClient):
     def __init__(self):
         self.service = rospy.ServiceProxy("/check_state_validity", GetStateValidity)
         rospy.loginfo("Connecting to State Validity service")
