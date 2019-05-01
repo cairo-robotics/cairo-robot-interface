@@ -275,14 +275,14 @@ class RobotStateValidityClient(AbstractROSClient):
             Name of the group (ex: "right_arm") on which to check for validity.
         Returns
         -------
-        response : GetStateValidityResponse
-            The GetStateValidityResponse response from the /check_state_validity service
+        response : bool
+            The GetStateValidityResponse.valid from the /check_state_validity service
         """
         request = GetStateValidityRequest()
         request.robot_state = robot_state
         request.group_name = group_name
         try:
-            response = self.service.call(request)
+            response = self.service.call(request).valid
             return response
         except ServiceException as e:
             rospy.logwarn(e)
