@@ -38,7 +38,7 @@ class SawyerForwardKinematicsClient(AbstractROSClient):
              joint_positions,
              joint_names=['right_j0', 'right_j1', 'right_j2', 'right_j3',
                           'right_j4', 'right_j5', 'right_j6'],
-             tip_names=["right_hand"]):
+             tip_names=["right_gripper_tip"]):
 
         """
 
