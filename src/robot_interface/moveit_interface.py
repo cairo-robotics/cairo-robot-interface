@@ -51,7 +51,7 @@ class AbstractMoveitInterface:
 
 
 class SawyerMoveitInterface(AbstractMoveitInterface):
-    '''creat various servers for reading in pose and joint data and moving
+    '''create various servers for reading in pose and joint data and moving
     sawyer accordingly'''
 
     def __init__(self, planning_group="right_arm"):
@@ -76,9 +76,16 @@ class SawyerMoveitInterface(AbstractMoveitInterface):
         '''set the pose target using the MoveGroupCommander'''
         self.group.set_pose_target(pose)
 
-    def set_joint_target(self, joints):
+    def set_joint_target(self, joints, joint_names=['right_j0', 'right_j1', 'right_j2', 'right_j3', 'right_j4', 'right_j5', 'right_j6']):
         '''set the joint targets using the MoveGroupCommander'''
-        self.group.set_joint_value_target(joints)
+        joint_state = JointState()
+        joint_state.name = joint_names
+        joint_state.position = joints
+        try:
+            self.group.set_joint_value_target(joint_state)
+        except moveit_commander.exception.MoveItCommanderException as e:
+            # https://github.com/Kinovarobotics/kinova-ros/issues/110
+            rospy.logwarn(e)
 
     def plan(self):
         '''set the pose plan using the MoveGroupCommander'''
