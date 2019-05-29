@@ -4,13 +4,43 @@ from cairo_robot_interface.srv import TransformLookup, TransformLookupResponse
 
 
 class TransformLookupService():
+    """
+    Class that creates a ROS service to handle incoming calls to calculate
+    transformations from one frame to another. 
 
+    Attributes
+    ----------
+    buffer : tf2_ros.Buffer
+        The tf2 Buffer that service to lookup transforms
+    listener : tf2_ros.TransformListener
+        The TransformListener object that consumes the buffer to update its state.
+    service_name : str
+        The ROS Service proxy object
+    """
     def __init__(self, service_name):
+        """
+        Parameters
+        ----------
+        buffer : tf2_ros.Buffer
+            The tf2 Buffer that service to lookup transforms
+        listener : tf2_ros.TransformListener
+            The TransformListener object that consumes the buffer to update its state.
+        service_name : str
+            The ROS Service proxy object
+        """
         self.buffer = tf2_ros.Buffer()
         self.listener = tf2_ros.TransformListener(self.buffer)
         self.service_name = service_name
 
     def lookup_transform(self, req):
+        """
+        Function to lookup transform given a TransformLookupRequest
+
+        Parameters
+        ----------
+        req : TransformLookupRequest
+            The request for the TrasnformLookupService
+        """
         resp = TransformLookupResponse()
         try:
             resp.transform = self.buffer.lookup_transform(req.source_frame, req.target_frame, rospy.Time())
@@ -21,6 +51,9 @@ class TransformLookupService():
             return resp
 
     def start_server(self):
+        """
+        Initiates/starts the Transform lookup service.
+        """
         s = rospy.Service(self.service_name, TransformLookup, self.lookup_transform)
         rospy.loginfo("{} service running...".format(self.service_name))
         rospy.spin()

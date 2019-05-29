@@ -1,7 +1,7 @@
 import rospy
 from robot_clients.abstract_clients import AbstractROSClient
 from moveit_msgs.srv import GetPositionFK, GetPositionFKRequest, GetPositionIK, \
-                            GetPositionIKRequest, GetStateValidity, GetStateValidityRequest
+    GetPositionIKRequest, GetStateValidity, GetStateValidityRequest
 from rospy.service import ServiceException
 from geometry_msgs.msg import (
     PoseStamped,
@@ -20,39 +20,76 @@ from intera_core_msgs.srv import (
 )
 
 
+class ForwardKinematicsResponse():
+
+    def __init__(self, valid, pose=None):
+        self.valid = valid
+        self.pose = pose
+
+
+class InverseKinematicsResponse():
+
+    def __init__(self, valid, joint_state=None):
+        self.valid = valid
+        self.joint_state = joint_state
+
+
 class SawyerForwardKinematicsClient(AbstractROSClient):
+    """
+    Class that creates a ROS client in order to make service calls to calculate
+    forward kinematics  give a set of joint positions. This client connects to
+    Rethink RObotics Intera Interface FKService service.
+
+    Attributes
+    ----------
+    ns : str
+        The Service name space
+    service : ServiceProxy
+        The ROS Service proxy object
+    """
     def __init__(self, limb="right"):
+        """
+        Parameters
+        ----------
+        limb : str
+            The limb for the service name; defaults to 'right'
+        """
         self.ns = "ExternalTools/" + limb + "/PositionKinematicsNode/FKService"
         self.service = rospy.ServiceProxy(self.ns, SolvePositionFK)
         rospy.loginfo("Connecting to Forward Kinematics service.")
         try:
             self.service.wait_for_service()
         except (rospy.ServiceException, rospy.ROSException), e:
-            rospy.logerr("Service call failed: %s" % (e,))
-            return False
+            rospy.logerr("Failed to connect to service: %s" % (e,))
 
     def close(self):
+        """
+        Closes the connection to the service
+        """
         self.service.close()
 
     def call(self,
              joint_positions,
              joint_names=['right_j0', 'right_j1', 'right_j2', 'right_j3',
                           'right_j4', 'right_j5', 'right_j6'],
-             tip_names=["right_hand"]):
-
+             tip_names=["right_gripper_tip"]):
         """
-
-        Call SolvePositionFK servce
+        Call 'FKService' service
 
         Parameters
         ----------
+        joint_positions : list
+            List of joint angle values (radians) on which to perform forward kinematics.
+        joint_names : list
+            List of joint names for the corresponding joint positions.
+        tip_names : list
+            List of tip names to which the forward kinematics are calculated.
 
         Returns
         -------
-        response : SolvePositionFKResponse
-
+        : ForwardKinematicsResponse
+            Returns a ForwardKinematicsResponse built from the SolvePositionFKResponse object returned by the service.
         """
-
         fkreq = SolvePositionFKRequest()
         joints = JointState()
         joints.name = joint_names
@@ -67,122 +104,135 @@ class SawyerForwardKinematicsClient(AbstractROSClient):
             resp = self.service(fkreq)
         except (rospy.ServiceException, rospy.ROSException), e:
             rospy.logerr("Service call failed: %s" % (e,))
-            return False
+            return ForwardKinematicsResponse(False, None)
         # Check if result valid
         if (resp.isValid[0]):
             rospy.logdebug("SUCCESS - Valid Cartesian Solution Found")
             rospy.logdebug("\nFK Cartesian Solution:\n")
             rospy.logdebug("------------------")
             rospy.logdebug("Response Message:\n%s", resp)
+            return ForwardKinematicsResponse(True, resp.pose_stamp[0].pose)
         else:
             rospy.logerr("INVALID JOINTS - No Cartesian Solution Found.")
-            return False
-        return resp.pose_stamp[0].pose
+            return ForwardKinematicsResponse(False, resp.pose_stamp[0].pose)
 
 
 class SawyerInverseKinematicsClient(AbstractROSClient):
-    def __init__(self, ):
-        self.service = rospy.ServiceProxy("/compute_ik", GetPositionIK)
+    """
+    Class that creates a ROS client in order to make service calls to calculate
+    inverse kinematics given a set of joint positions. This class makes use of
+    Rethink Robotics Intera Interface service IKService.
+
+    Attributes
+    ----------
+    ns : str
+        The Service name space
+    service : ServiceProxy
+        The ROS Service proxy object
+    """
+    def __init__(self, limb="right"):
+        """
+        Parameters
+        ----------
+        limb : str
+            The limb for the service name; defaults to 'right'
+        """
+        self.ns = "ExternalTools/" + limb + "/PositionKinematicsNode/IKService"
+        self.service = rospy.ServiceProxy(ns, SolvePositionIK)
         rospy.loginfo("Connecting to Inverse Kinematics service.")
-        self.service.wait_for_service()
+        try:
+            self.service.wait_for_service()
+        except (rospy.ServiceException, rospy.ROSException), e:
+            rospy.logerr("Failed to connect to service: %s" % (e,))
 
     def close(self):
+        """
+        Closes the connection to the service
+        """
         self.service.close()
 
-    def call(self, pose, tip_name="/right_gripper_tip", limb="left", use_advanced_options=False):
-
+    def call(self, pose, tip_name="/right_gripper_tip"):
         """
+        Call 'IKService' service
 
-        Call the inverse kinematics service "/compute_ik" to get IK for a give Pose (must be PoseStamped).
 
         Parameters
         ----------
-
+        pose : geometry_msgs.PosedStamped
+            The pose on which to perform Inverse Kinematics.
+        tip_name : str
+            The ending frame name in the transform tree from which to compute Inverse Kinematics.
 
         Returns
         -------
-        response : GetPositionIKResponse
-            The GetPositionIKRespponse response from the /compute_ik service
+        response : InverseKinematicsResponse
+            The InverseKinematicsResponse response built from the IKService service response.
         """
 
-        ns = "ExternalTools/" + limb + "/PositionKinematicsNode/IKService"
-        iksvc = rospy.ServiceProxy(ns, SolvePositionIK)
         ikreq = SolvePositionIKRequest()
         hdr = Header(stamp=rospy.Time.now(), frame_id='base')
         poses = pose
         poses.hdr = hdr
         # Add desired pose for inverse kinematics
-        ikreq.pose_stamp.append(poses[limb])
+        ikreq.pose_stamp.append(poses[self.limb])
         # Request inverse kinematics from base to "right_hand" link
         ikreq.tip_names.append(tip_name)
 
-        if (use_advanced_options):
-            # Optional Advanced IK parameters
-            rospy.loginfo("Running Advanced IK Service Client example.")
-            # The joint seed is where the IK position solver starts its optimization
-            ikreq.seed_mode = ikreq.SEED_USER
-            seed = JointState()
-            seed.name = ['right_j0', 'right_j1', 'right_j2', 'right_j3',
-                         'right_j4', 'right_j5', 'right_j6']
-            seed.position = [0.7, 0.4, -1.7, 1.4, -1.1, -1.6, -0.4]
-            ikreq.seed_angles.append(seed)
-
-            # Once the primary IK task is solved, the solver will then try to bias the
-            # the joint angles toward the goal joint configuration. The null space is 
-            # the extra degrees of freedom the joints can move without affecting the
-            # primary IK task.
-            ikreq.use_nullspace_goal.append(True)
-            # The nullspace goal can either be the full set or subset of joint angles
-            goal = JointState()
-            goal.name = ['right_j1', 'right_j2', 'right_j3']
-            goal.position = [0.1, -0.3, 0.5]
-            ikreq.nullspace_goal.append(goal)
-            # The gain used to bias toward the nullspace goal. Must be [0.0, 1.0]
-            # If empty, the default gain of 0.4 will be used
-            ikreq.nullspace_gain.append(0.4)
-        else:
-            rospy.loginfo("Running Simple IK Service Client example.")
-
         try:
-            rospy.wait_for_service(ns, 5.0)
-            resp = iksvc(ikreq)
+            resp = self.service(ikreq)
         except (rospy.ServiceException, rospy.ROSException), e:
             rospy.logerr("Service call failed: %s" % (e,))
-            return False
 
         # Check if result valid, and type of seed ultimately used to get solution
         if (resp.result_type[0] > 0):
             seed_str = {
-                        ikreq.SEED_USER: 'User Provided Seed',
-                        ikreq.SEED_CURRENT: 'Current Joint Angles',
-                        ikreq.SEED_NS_MAP: 'Nullspace Setpoints',
-                       }.get(resp.result_type[0], 'None')
-            rospy.loginfo("SUCCESS - Valid Joint Solution Found from Seed Type: %s" % (seed_str,))
+                ikreq.SEED_USER: 'User Provided Seed',
+                ikreq.SEED_CURRENT: 'Current Joint Angles',
+                ikreq.SEED_NS_MAP: 'Nullspace Setpoints',
+            }.get(resp.result_type[0], 'None')
+            rospy.logdebug(
+                "SUCCESS - Valid Joint Solution Found from Seed Type: %s" % (seed_str,))
             # Format solution into Limb API-compatible dictionary
-            limb_joints = dict(zip(resp.joints[0].name, resp.joints[0].position))
-            rospy.loginfo("\nIK Joint Solution:\n%s", limb_joints)
-            rospy.loginfo("------------------")
-            rospy.loginfo("Response Message:\n%s", resp)
-            return resp
+            rospy.logdebug("\nIK Joint Solution:\n%s", limb_joints)
+            return InverseKinematicsResponse(True, resp.joints[0])
+        else:
+            return InverseKinematicsResponse(False, None)
 
 
-class MoveItForwardKinematicsClient(AbstractROSClient):
+class MoveitForwardKinematicsClient(AbstractROSClient):
+    """
+    Class that creates a ROS client in order to make service calls to calculate
+    forward kinematics  give a set of joint positions. This client connects to
+    MoveIt's '/compute_fk' service.
+
+    Attributes
+    ----------
+    service : ServiceProxy
+        The ROS Service proxy object
+    """
     def __init__(self):
         self.service = rospy.ServiceProxy("/compute_fk", GetPositionFK)
         rospy.loginfo("Connecting to Forward Kinematics service.")
-        self.service.wait_for_service()
+        try:
+            self.service.wait_for_service()
+        except (rospy.ServiceException, rospy.ROSException), e:
+            rospy.logerr("Failed to connect to service: %s" % (e,))
 
     def close(self):
+        """
+        Closes the connection to the service
+        """
         self.service.close()
 
     def call(self,
              positions,
-             joint_names=['right_j0', 'right_j1', 'right_j2', 'right_j3', 'right_j4', 'right_j5', 'right_j6'],
+             joint_names=['right_j0', 'right_j1', 'right_j2',
+                          'right_j3', 'right_j4', 'right_j5', 'right_j6'],
              links=["right_gripper_tip"],
              frame_id="/base"):
-
         """
         Call the forward kinematics service "/compute_fk" to get FK of a joint configuration.
+
         Parameters
         ----------
         links : list
@@ -195,8 +245,8 @@ class MoveItForwardKinematicsClient(AbstractROSClient):
             Reference frame.
         Returns
         -------
-        response : GetPositionFKResponse
-            The GetPositionFKResponse response from the /compute_fk service
+        : ForwardKinematicsResponse
+            The ForwardKinematicsResponse response built from from the /compute_fk service response.
         """
         request = GetPositionFKRequest()
         request.fk_link_names = links
@@ -204,23 +254,43 @@ class MoveItForwardKinematicsClient(AbstractROSClient):
         request.robot_state.joint_state.position = positions
         request.header.frame_id = frame_id
         response = self.service.call(request)
-        return response.pose_stamped[0].pose
+
+        # check if there is a moveit failure.
+        if response.error_code = 99999:
+            return ForwardKinematicsResponse(False, None)
+        else:
+            return ForwardKinematicsResponse(True, response.pose_stamped[0].pose)
 
 
-class MoveItInverseKinematicsClient(AbstractROSClient):
+class MoveitInverseKinematicsClient(AbstractROSClient):
+    """
+    Class that creates a ROS client in order to make service calls to calculate
+    inverse kinematics  give a set of joint positions. This client connects to
+    MoveIt's '/compute_ik' service.
+
+    Attributes
+    ----------
+    service : ServiceProxy
+        The ROS Service proxy object
+    """
     def __init__(self):
         self.service = rospy.ServiceProxy("/compute_ik", GetPositionIK)
         rospy.loginfo("Connecting to Inverse Kinematics service.")
-        self.service.wait_for_service()
+        try:
+            self.service.wait_for_service()
+        except (rospy.ServiceException, rospy.ROSException), e:
+            rospy.logerr("Failed to connect to service: %s" % (e,))
 
     def close(self):
+        """
+        Closes the connection to the service
+        """
         self.ik_srv.close()
 
     def call(self, pose, group_name="right_arm", link="/right_gripper_tip", avoid_collisions=True, attempts=10):
-
         """
         Call the inverse kinematics service "/compute_ik" to get IK for a give Pose (must be PoseStamped).
-        
+
         Parameters
         ----------
         group_name : string
@@ -235,10 +305,9 @@ class MoveItInverseKinematicsClient(AbstractROSClient):
             Number of attempts to try before deemed at failure.
         Returns
         -------
-        response : GetPositionIKResponse
-            The GetPositionIKRespponse response from the /compute_ik service
+        response : InverseKinematicsResponse
+            The InverseKinematicsResponse response built from the /compute_ik service response.
         """
-
         request = GetPositionIKRequest()
         request.ik_request.group_name = group_name
         request.ik_request.avoid_collisions = avoid_collisions
@@ -246,21 +315,37 @@ class MoveItInverseKinematicsClient(AbstractROSClient):
         if isinstance(pose, PoseStamped):
             request.ik_request.pose_stamped = pose
         else:
-            rospy.logerr("Pose must be of type PoseStamped for the InverseKinematics call() method!")
-            return
+            rospy.logerr(
+                "Pose must be of type PoseStamped for the InverseKinematics call() method!")
+            raise ValueError("Pose must be of type PoseStamped for the InverseKinematics call() method!")
         request.ik_request.attempts = attempts
         response = self.service.call(request)
-        rospy.logwarn("Sent: " + str(request))
-        return response
+        if response.error_code = 99999:
+            return InverseKinematicsResponse(False, None)
+        else:
+            return InverseKinematicsResponse(True, response.solution.joint_state)
 
 
-class RobotStateValidityClient(AbstractROSClient):
+class MoveitRobotStateValidityClient(AbstractROSClient):
+    """
+    Class that creates a ROS client in order to make service calls to check for point validity
+    given a robot state. This client connects to MoveIt's '/check_state_validity' service.
+
+    Attributes
+    ----------
+    service : ServiceProxy
+        The ROS Service proxy object
+    """
     def __init__(self):
-        self.service = rospy.ServiceProxy("/check_state_validity", GetStateValidity)
+        self.service = rospy.ServiceProxy(
+            "/check_state_validity", GetStateValidity)
         rospy.loginfo("Connecting to State Validity service")
         self.service.wait_for_service()
 
     def close(self):
+        """
+        Closes the connection to the service
+        """
         self.sv_srv.close()
 
     def call(self, robot_state, group_name="right_arm"):
@@ -269,13 +354,13 @@ class RobotStateValidityClient(AbstractROSClient):
         Parameters
         ----------
         robot_state : RobotState
-            RobotState msg for which to check validity.
+            RobotState for which to check validity.
         group_name : string
             Name of the group (ex: "right_arm") on which to check for validity.
         Returns
         -------
-        response : bool
-            The GetStateValidityResponse.valid from the /check_state_validity service
+        response : GetStateValidityResponse
+            The GetStateValidityResponse response from the /check_state_validity service.
         """
         request = GetStateValidityRequest()
         request.robot_state = robot_state
