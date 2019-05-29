@@ -74,7 +74,7 @@ class SawyerForwardKinematicsClient(AbstractROSClient):
                           'right_j4', 'right_j5', 'right_j6'],
              tip_names=["right_gripper_tip"]):
         """
-        Call SolvePositionFK service
+        Call 'FKService' service
 
         Parameters
         ----------
@@ -153,8 +153,8 @@ class SawyerInverseKinematicsClient(AbstractROSClient):
 
     def call(self, pose, tip_name="/right_gripper_tip"):
         """
+        Call 'IKService' service
 
-        Call the inverse kinematics service "/compute_ik" to get IK for a give Pose (must be PoseStamped).
 
         Parameters
         ----------
@@ -199,7 +199,7 @@ class SawyerInverseKinematicsClient(AbstractROSClient):
             return InverseKinematicsResponse(False, None)
 
 
-class MoveItForwardKinematicsClient(AbstractROSClient):
+class MoveitForwardKinematicsClient(AbstractROSClient):
     """
     Class that creates a ROS client in order to make service calls to calculate
     forward kinematics  give a set of joint positions. This client connects to
@@ -219,6 +219,9 @@ class MoveItForwardKinematicsClient(AbstractROSClient):
             rospy.logerr("Failed to connect to service: %s" % (e,))
 
     def close(self):
+        """
+        Closes the connection to the service
+        """
         self.service.close()
 
     def call(self,
@@ -229,6 +232,7 @@ class MoveItForwardKinematicsClient(AbstractROSClient):
              frame_id="/base"):
         """
         Call the forward kinematics service "/compute_fk" to get FK of a joint configuration.
+
         Parameters
         ----------
         links : list
@@ -258,7 +262,17 @@ class MoveItForwardKinematicsClient(AbstractROSClient):
             return ForwardKinematicsResponse(True, response.pose_stamped[0].pose)
 
 
-class MoveItInverseKinematicsClient(AbstractROSClient):
+class MoveitInverseKinematicsClient(AbstractROSClient):
+    """
+    Class that creates a ROS client in order to make service calls to calculate
+    inverse kinematics  give a set of joint positions. This client connects to
+    MoveIt's '/compute_ik' service.
+
+    Attributes
+    ----------
+    service : ServiceProxy
+        The ROS Service proxy object
+    """
     def __init__(self):
         self.service = rospy.ServiceProxy("/compute_ik", GetPositionIK)
         rospy.loginfo("Connecting to Inverse Kinematics service.")
@@ -268,6 +282,9 @@ class MoveItInverseKinematicsClient(AbstractROSClient):
             rospy.logerr("Failed to connect to service: %s" % (e,))
 
     def close(self):
+        """
+        Closes the connection to the service
+        """
         self.ik_srv.close()
 
     def call(self, pose, group_name="right_arm", link="/right_gripper_tip", avoid_collisions=True, attempts=10):
@@ -309,9 +326,15 @@ class MoveItInverseKinematicsClient(AbstractROSClient):
             return InverseKinematicsResponse(True, response.solution.joint_state)
 
 
-class RobotStateValidityClient(AbstractROSClient):
+class MoveitRobotStateValidityClient(AbstractROSClient):
     """
-    This class 
+    Class that creates a ROS client in order to make service calls to check for point validity
+    given a robot state. This client connects to MoveIt's '/check_state_validity' service.
+
+    Attributes
+    ----------
+    service : ServiceProxy
+        The ROS Service proxy object
     """
     def __init__(self):
         self.service = rospy.ServiceProxy(
@@ -320,6 +343,9 @@ class RobotStateValidityClient(AbstractROSClient):
         self.service.wait_for_service()
 
     def close(self):
+        """
+        Closes the connection to the service
+        """
         self.sv_srv.close()
 
     def call(self, robot_state, group_name="right_arm"):
@@ -333,8 +359,8 @@ class RobotStateValidityClient(AbstractROSClient):
             Name of the group (ex: "right_arm") on which to check for validity.
         Returns
         -------
-        response : bool
-            The GetStateValidityResponse.valid from the /check_state_validity service
+        response : GetStateValidityResponse
+            The GetStateValidityResponse response from the /check_state_validity service.
         """
         request = GetStateValidityRequest()
         request.robot_state = robot_state
