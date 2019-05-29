@@ -102,10 +102,19 @@ class SawyerMoveitInterface(AbstractMoveitInterface):
             self.execute(plan)
 
     def get_FK_pose(self, joint_positions):
-        return self.fk_client.call(joint_positions)
+        resp = self.fk_client.call(joint_positions)
+        if resp.valid:
+            pose = resp.pose
+            return pose
+        else:
+            return None
 
     def get_IK_pose(self, pose):
-        return self.ik_client.call(pose)
+        resp = self.ik_client.call(pose)
+        if resp.valid:
+            return resp.joint_state.position
+        else:
+            return None 
 
     def check_point_validity(self, robot_state, group_name="right_arm"):
         if type(robot_state) is not RobotState:
