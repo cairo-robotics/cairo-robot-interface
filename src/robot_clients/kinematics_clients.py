@@ -68,7 +68,6 @@ class SawyerForwardKinematicsClient(AbstractROSClient):
         except (rospy.ServiceException, rospy.ROSException), e:
             rospy.logerr("Service call failed: %s" % (e,))
             return False
-
         # Check if result valid
         if (resp.isValid[0]):
             rospy.logdebug("SUCCESS - Valid Cartesian Solution Found")
@@ -90,7 +89,7 @@ class SawyerInverseKinematicsClient(AbstractROSClient):
     def close(self):
         self.service.close()
 
-    def call(self, pose, tip_name="/right_gripper", limb="left", use_advanced_options=False):
+    def call(self, pose, tip_name="/right_gripper_tip", limb="left", use_advanced_options=False):
 
         """
 
@@ -179,7 +178,7 @@ class MoveItForwardKinematicsClient(AbstractROSClient):
     def call(self,
              positions,
              joint_names=['right_j0', 'right_j1', 'right_j2', 'right_j3', 'right_j4', 'right_j5', 'right_j6'],
-             links=["right_hand"],
+             links=["right_gripper_tip"],
              frame_id="/base"):
 
         """
@@ -217,7 +216,7 @@ class MoveItInverseKinematicsClient(AbstractROSClient):
     def close(self):
         self.ik_srv.close()
 
-    def call(self, pose, group_name="right_arm", link="/right_hand", avoid_collisions=True, attempts=10):
+    def call(self, pose, group_name="right_arm", link="/right_gripper_tip", avoid_collisions=True, attempts=10):
 
         """
         Call the inverse kinematics service "/compute_ik" to get IK for a give Pose (must be PoseStamped).
@@ -266,7 +265,7 @@ class RobotStateValidityClient(AbstractROSClient):
 
     def call(self, robot_state, group_name="right_arm"):
         """
-        Given a robot state and a group name, caluclate whether or not the state is valid.
+        Given a robot state and a group name, calculate whether or not the state is valid.
         Parameters
         ----------
         robot_state : RobotState
@@ -282,8 +281,8 @@ class RobotStateValidityClient(AbstractROSClient):
         request.robot_state = robot_state
         request.group_name = group_name
         try:
-            response = self.service.call(request).valid
-            return response
+            response = self.service.call(request)
+            return response.valid
         except ServiceException as e:
             rospy.logwarn(e)
             return None
