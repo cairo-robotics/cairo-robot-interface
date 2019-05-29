@@ -354,7 +354,7 @@ class MoveitRobotStateValidityClient(AbstractROSClient):
         Parameters
         ----------
         robot_state : RobotState
-            RobotState msg for which to check validity.
+            RobotState for which to check validity.
         group_name : string
             Name of the group (ex: "right_arm") on which to check for validity.
         Returns
