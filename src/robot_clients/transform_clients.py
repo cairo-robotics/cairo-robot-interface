@@ -11,7 +11,7 @@ class TransformLookupClient(AbstractROSClient):
         self.service = rospy.ServiceProxy(self.ns, TransformLookup)
         rospy.loginfo("Connecting to Transform Lookup service.")
         try:
-            self.service.wait_for_service()
+            rospy.wait_for_service(self.ns, 20)
             rospy.loginfo("Connected to Transform Lookup service")
         except (rospy.ServiceException, rospy.ROSException), e:
             rospy.logerr("Service call failed: %s" % (e,))
