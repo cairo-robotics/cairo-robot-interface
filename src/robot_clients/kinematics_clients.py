@@ -55,7 +55,7 @@ class SawyerForwardKinematicsClient(AbstractROSClient):
             The limb for the service name; defaults to 'right'
         """
         self.ns = "ExternalTools/" + limb + "/PositionKinematicsNode/FKService"
-        self.service = rospy.ServiceProxy(self.ns, SolvePositionFK)
+        self.service = rospy.ServiceProxy(self.ns, SolvePositionFK, persistent=True)
         rospy.loginfo("Connecting to Forward Kinematics service.")
         try:
             self.service.wait_for_service()
@@ -138,7 +138,7 @@ class SawyerInverseKinematicsClient(AbstractROSClient):
             The limb for the service name; defaults to 'right'
         """
         self.ns = "ExternalTools/" + limb + "/PositionKinematicsNode/IKService"
-        self.service = rospy.ServiceProxy(ns, SolvePositionIK)
+        self.service = rospy.ServiceProxy(ns, SolvePositionIK, persistent=True)
         rospy.loginfo("Connecting to Inverse Kinematics service.")
         try:
             self.service.wait_for_service()
@@ -211,7 +211,7 @@ class MoveitForwardKinematicsClient(AbstractROSClient):
         The ROS Service proxy object
     """
     def __init__(self):
-        self.service = rospy.ServiceProxy("/compute_fk", GetPositionFK)
+        self.service = rospy.ServiceProxy("/compute_fk", GetPositionFK, persistent=True)
         rospy.loginfo("Connecting to Forward Kinematics service.")
         try:
             self.service.wait_for_service()
@@ -274,7 +274,7 @@ class MoveitInverseKinematicsClient(AbstractROSClient):
         The ROS Service proxy object
     """
     def __init__(self):
-        self.service = rospy.ServiceProxy("/compute_ik", GetPositionIK)
+        self.service = rospy.ServiceProxy("/compute_ik", GetPositionIK, persistent=True)
         rospy.loginfo("Connecting to Inverse Kinematics service.")
         try:
             self.service.wait_for_service()
@@ -338,7 +338,7 @@ class MoveitRobotStateValidityClient(AbstractROSClient):
     """
     def __init__(self):
         self.service = rospy.ServiceProxy(
-            "/check_state_validity", GetStateValidity)
+            "/check_state_validity", GetStateValidity, persistent=True)
         rospy.loginfo("Connecting to State Validity service")
         self.service.wait_for_service()
 
