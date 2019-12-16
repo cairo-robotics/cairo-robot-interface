@@ -159,7 +159,7 @@ class SawyerMoveitInterface(AbstractMoveitInterface):
             self.group.set_joint_value_target(joint_state)
         except moveit_commander.exception.MoveItCommanderException as e:
             # https://github.com/Kinovarobotics/kinova-ros/issues/110
-            rospy.logwarn(e)
+            rospy.loginfo("False negative from Python for invalid joint state.")
 
     def plan(self):
         """
