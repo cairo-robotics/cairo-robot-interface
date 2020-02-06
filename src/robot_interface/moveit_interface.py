@@ -13,6 +13,14 @@ class AbstractMoveitInterface:
     __metaclass__ = ABCMeta
 
     @abstractmethod
+    def set_planner(self, planner):
+        pass
+
+    @abstractmethod
+    def get_robot_state(self):
+        pass
+
+    @abstractmethod
     def set_velocity_scaling(self, velocity_scaling):
         pass
 
@@ -94,6 +102,18 @@ class SawyerMoveitInterface(AbstractMoveitInterface):
         self.fk_client = MoveitForwardKinematicsClient()
         self.ik_client = MoveitInverseKinematicsClient()
         self.rsv_client = MoveitRobotStateValidityClient()
+
+    def set_planner(self, planner):
+        """
+        Set the planner according to the planner ID. Default for Sawyer is RRTConnectkConfigDefault
+
+        Parameters
+        ----------
+        planner : string
+            String ID of the MoveIt planner e.g. RRTConnectkConfigDefault or RRTstarkConfigDefault
+
+        """
+        self.group.set_planner_id(planner)
 
     def get_robot_state(self):
         """
