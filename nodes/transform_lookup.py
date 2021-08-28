@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 import argparse
 from robot_clients.transform_clients import TransformLookupClient

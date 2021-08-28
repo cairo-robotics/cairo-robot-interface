@@ -147,7 +147,8 @@ class SawyerMoveitInterface(AbstractMoveitInterface, AbstractRobotInterface):
         plan : RobotTrajectory
             A RobotTrajectory representing the plan to execute.
         """
-        self.group.execute(plan)
+        print(plan)
+        self.group.execute(plan[1])
 
     def move_to_joint_targets(self, joint_target_list):
         """
