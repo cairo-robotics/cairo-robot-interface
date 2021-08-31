@@ -9,7 +9,7 @@ class TransformLookupClient(AbstractROSClient):
     def __init__(self, service_name):
         self.ns = service_name
         self.service = rospy.ServiceProxy(self.ns, TransformLookup)
-        rospy.loginfo("Connecting to Transform Lookup service.")
+        rospy.loginfo("Connecting to Transform Lookup service {}".format(self.ns))
         try:
             rospy.wait_for_service(self.ns, 20)
             rospy.loginfo("Connected to Transform Lookup service")
@@ -38,10 +38,9 @@ class TransformLookupClient(AbstractROSClient):
         req.target_frame = target_frame
 
         try:
-            rospy.wait_for_service(self.ns, 5.0)
             resp = self.service(req)
-            if resp.error.error_string is not None:
-                rospy.logwarn("Transform lookup failed: %s" % (e,))
+            if resp.error.error != 0:
+                rospy.logwarn("Transform lookup failed: %s" % (resp.error.error_string,))
                 return TransformStamped()
             return resp.transform
         except rospy.ServiceException as e:
