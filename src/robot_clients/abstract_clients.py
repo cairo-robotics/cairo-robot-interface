@@ -1,11 +1,10 @@
 from abc import ABCMeta, abstractmethod
 
 
-class AbstractROSClient():
+class AbstractROSClient(metaclass=ABCMeta):
     """
     Abstract ROS client class to enforce programming close() and call() interface.
     """
-    __metaclass__ = ABCMeta
 
     @abstractmethod
     def close():

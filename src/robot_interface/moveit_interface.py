@@ -1,67 +1,13 @@
-from abc import ABCMeta, abstractmethod
+import rospy
 import moveit_commander
 from moveit_msgs.msg import RobotState
 from sensor_msgs.msg import JointState
-import rospy
+
+from robot_interface.base_interface import AbstractRobotInterface, AbstractMoveitInterface
 from robot_clients.kinematics_clients import MoveitForwardKinematicsClient, MoveitInverseKinematicsClient, MoveitRobotStateValidityClient
 
 
-class AbstractMoveitInterface:
-    """
-    Abstract class to program to specific interface for interacting with Moveit.
-    """
-    __metaclass__ = ABCMeta
-
-    @abstractmethod
-    def set_planner(self, planner):
-        pass
-
-    @abstractmethod
-    def get_robot_state(self):
-        pass
-
-    @abstractmethod
-    def set_velocity_scaling(self, velocity_scaling):
-        pass
-
-    @abstractmethod
-    def set_acceleration_scaling(self, acceleration_scaling):
-        pass
-
-    @abstractmethod
-    def set_pose_target(self, pose):
-        pass
-
-    @abstractmethod
-    def set_joint_target(self, joints):
-        pass
-
-    @abstractmethod
-    def plan(self):
-        pass
-
-    @abstractmethod
-    def execute(self, plan):
-        pass
-
-    @abstractmethod
-    def get_FK_pose(self, joints):
-        pass
-
-    @abstractmethod
-    def get_IK_pose(self, pose):
-        pass
-
-    @abstractmethod
-    def check_point_validity(self):
-        pass
-
-    @abstractmethod
-    def create_robot_state(self, joints):
-        pass
-
-
-class SawyerMoveitInterface(AbstractMoveitInterface):
+class SawyerMoveitInterface(AbstractMoveitInterface, AbstractRobotInterface):
     """
     Class that provides a simplified interface to Moveit Python API
 
@@ -179,7 +125,7 @@ class SawyerMoveitInterface(AbstractMoveitInterface):
             self.group.set_joint_value_target(joint_state)
         except moveit_commander.exception.MoveItCommanderException as e:
             # https://github.com/Kinovarobotics/kinova-ros/issues/110
-            rospy.logwarn(e)
+            rospy.loginfo("False negative from Python for invalid joint state.")
 
     def plan(self):
         """
@@ -201,7 +147,8 @@ class SawyerMoveitInterface(AbstractMoveitInterface):
         plan : RobotTrajectory
             A RobotTrajectory representing the plan to execute.
         """
-        self.group.execute(plan)
+        print(plan)
+        self.group.execute(plan[1])
 
     def move_to_joint_targets(self, joint_target_list):
         """
@@ -217,7 +164,7 @@ class SawyerMoveitInterface(AbstractMoveitInterface):
             plan = self.plan()
             self.execute(plan)
 
-    def get_FK_pose(self, joint_positions):
+    def forward_kinematics(self, joint_positions):
         """
         Gets the pose for a given joint angle arrangement via Forward Kinematics.
 
@@ -238,7 +185,7 @@ class SawyerMoveitInterface(AbstractMoveitInterface):
         else:
             return None
 
-    def get_IK_pose(self, pose):
+    def inverse_kinematics(self, pose):
         """
         Gets the joint angles for a given pose via Inverse Kinematics.
 
@@ -302,7 +249,3 @@ class SawyerMoveitInterface(AbstractMoveitInterface):
         joint_state.position = joints
         robot_state.joint_state = joint_state
         return robot_state
-
-    def get_end_effector_pose(self, joint_positions, limb="right"):
-        # DEPRECATED
-        return self.get_FK_pose(joint_positions)

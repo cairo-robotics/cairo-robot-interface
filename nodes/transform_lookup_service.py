@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from robot_servers.transform_servers import TransformLookupService
 import rospy
