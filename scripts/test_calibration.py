@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import rospy, tf, numpy as np, json, rospkg, yaml
 from os import system
@@ -35,8 +35,8 @@ def record_calibration_points(world_frame_robot='/world',
             try:
                 tfl.waitForTransform(world_frame_robot, calib_frame_robot, rospy.Time(), rospy.Duration(4.0))
                 pose_rg_robot = tfl.lookupTransform(world_frame_robot, calib_frame_robot, rospy.Time(0))
-            except Exception, e:
-                print "Robot <-> Optitrack transformation not available at the last known common time:", e.message
+            except Exception as e:
+                print("Robot <-> Optitrack transformation not available at the last known common time:", e)
             else:
                 # only collect points if the distance in the robot frame is greater than the last obtained point.
                 if last_point is None or euclidean(np.array(pose_rg_robot[0] + pose_rg_robot[1]), np.array(last_point[0] + last_point[1])) > min_dist:
@@ -44,18 +44,18 @@ def record_calibration_points(world_frame_robot='/world',
                         tfl.waitForTransform(world_frame_opt, calib_frame_opt, rospy.Time(0), rospy.Duration(4.0))
                         pose_rg_opt = tfl.lookupTransform(world_frame_opt, calib_frame_opt, rospy.Time(0))
                     except:
-                        print "Optitrack Marker not visible at the last know common time"
+                        print("Optitrack Marker not visible at the last know common time")
                     else:
                         mat_robot.append(np.array(pose_rg_robot))
                         mat_opt.append(np.array(pose_rg_opt))
                         last_point = pose_rg_robot
         else:
-            print "TFs are", (now - ref_time).to_sec(), "sec late"
+            print("TFs are", (now - ref_time).to_sec(), "sec late")
 
         if continuous:
             rospy.sleep(0.25)
         else:
-            entry = raw_input("Press enter to record a new point or q-enter to quit ({} points)".format(len(mat_robot)))
+            entry = input("Press enter to record a new point or q-enter to quit ({} points)".format(len(mat_robot)))
     print("OPTITRACK MATRIX:")
     print(mat_opt)
     print("\n\nROBOT MATRIX")
@@ -177,7 +177,7 @@ if __name__ == "__main__":
                                                    calib_frame_robot=calib_frame_robot,
                                                    calib_frame_opt=calib_frame_opt,
                                                    continuous=True)
-    print len(mat_opt), "points recorded"
+    print(len(mat_opt), "points recorded")
     print
     print
     # Optimization
@@ -187,9 +187,9 @@ if __name__ == "__main__":
     # Be patient, this can run for a long time....
     result = minimize(evaluate_calibration, initial_guess, args=(mat_robot, mat_opt, ),
                       method='L-BFGS-B', bounds=bounds)
-    print time.time() - t0, "seconds of optimization"
+    print(time.time() - t0, "seconds of optimization")
 
-    print result
+    print(result)
     result_list = extract_transforms(result.x)
     # Dumping A i.e. the calibration matrix (the transformation between the optitrack frame and the robot base frame)
     calibration_matrix_a = result_to_calibration_matrix(result_list[0])

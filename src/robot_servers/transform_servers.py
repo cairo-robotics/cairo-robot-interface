@@ -32,7 +32,7 @@ class TransformLookupService():
         self.listener = tf2_ros.TransformListener(self.buffer)
         self.service_name = service_name
 
-    def lookup_transform(self, req):
+    def _lookup_transform(self, req):
         """
         Function to lookup transform given a TransformLookupRequest
 
@@ -44,9 +44,10 @@ class TransformLookupService():
         resp = TransformLookupResponse()
         try:
             resp.transform = self.buffer.lookup_transform(req.source_frame, req.target_frame, rospy.Time())
+            resp.error.error = 0
             return resp
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
-            rospy.logwarn(e)
+            resp.error.error = 1
             resp.error.error_string = e.message
             return resp
 
@@ -54,6 +55,6 @@ class TransformLookupService():
         """
         Initiates/starts the Transform lookup service.
         """
-        s = rospy.Service(self.service_name, TransformLookup, self.lookup_transform)
+        s = rospy.Service(self.service_name, TransformLookup, self._lookup_transform)
         rospy.loginfo("{} service running...".format(self.service_name))
         rospy.spin()

@@ -147,7 +147,8 @@ class SawyerMoveitInterface(AbstractMoveitInterface, AbstractRobotInterface):
         plan : RobotTrajectory
             A RobotTrajectory representing the plan to execute.
         """
-        self.group.execute(plan)
+        print(plan)
+        self.group.execute(plan[1])
 
     def move_to_joint_targets(self, joint_target_list):
         """
@@ -163,7 +164,7 @@ class SawyerMoveitInterface(AbstractMoveitInterface, AbstractRobotInterface):
             plan = self.plan()
             self.execute(plan)
 
-    def get_FK_pose(self, joint_positions):
+    def forward_kinematics(self, joint_positions):
         """
         Gets the pose for a given joint angle arrangement via Forward Kinematics.
 
@@ -184,7 +185,7 @@ class SawyerMoveitInterface(AbstractMoveitInterface, AbstractRobotInterface):
         else:
             return None
 
-    def get_IK_pose(self, pose):
+    def inverse_kinematics(self, pose):
         """
         Gets the joint angles for a given pose via Inverse Kinematics.
 
@@ -248,7 +249,3 @@ class SawyerMoveitInterface(AbstractMoveitInterface, AbstractRobotInterface):
         joint_state.position = joints
         robot_state.joint_state = joint_state
         return robot_state
-
-    def get_end_effector_pose(self, joint_positions, limb="right"):
-        # DEPRECATED
-        return self.get_FK_pose(joint_positions)

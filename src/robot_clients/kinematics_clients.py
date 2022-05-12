@@ -59,8 +59,10 @@ class SawyerForwardKinematicsClient(AbstractROSClient):
         rospy.loginfo("Connecting to Forward Kinematics service.")
         try:
             self.service.wait_for_service()
-        except (rospy.ServiceException, rospy.ROSException), e:
-            rospy.logerr("Failed to connect to service: %s" % (e,))
+        except ServiceException as e:
+            rospy.logerr("Service call failed: {}".format(e))
+        except rospy.ROSException as e:
+            rospy.logerr("General ROS Exception: {}".format(e))
 
     def close(self):
         """
@@ -102,9 +104,13 @@ class SawyerForwardKinematicsClient(AbstractROSClient):
         try:
             rospy.wait_for_service(self.ns, 5.0)
             resp = self.service(fkreq)
-        except (rospy.ServiceException, rospy.ROSException), e:
-            rospy.logerr("Service call failed: %s" % (e,))
+        except ServiceException as e:
+            rospy.logerr("Service call failed: {}".format(e))
             return ForwardKinematicsResponse(False, None)
+        except rospy.ROSException as e:
+            rospy.logerr("General ROS Exception: {}".format(e))
+            return ForwardKinematicsResponse(False, None)
+            
         # Check if result valid
         if (resp.isValid[0]):
             rospy.logdebug("SUCCESS - Valid Cartesian Solution Found")
@@ -142,8 +148,10 @@ class SawyerInverseKinematicsClient(AbstractROSClient):
         rospy.loginfo("Connecting to Inverse Kinematics service.")
         try:
             self.service.wait_for_service()
-        except (rospy.ServiceException, rospy.ROSException), e:
-            rospy.logerr("Failed to connect to service: %s" % (e,))
+        except rospy.ServiceException as e:
+            rospy.logerr("Service call failed: %s" % (e,))
+        except rospy.ROSException as e:
+            rospy.logerr("General ROS Exception: %s" % (e,))
 
     def close(self):
         """
@@ -180,8 +188,10 @@ class SawyerInverseKinematicsClient(AbstractROSClient):
 
         try:
             resp = self.service(ikreq)
-        except (rospy.ServiceException, rospy.ROSException), e:
+        except rospy.ServiceException as e:
             rospy.logerr("Service call failed: %s" % (e,))
+        except rospy.ROSException as e:
+            rospy.logerr("General ROS Exception: %s" % (e,))
 
         # Check if result valid, and type of seed ultimately used to get solution
         if (resp.result_type[0] > 0):
@@ -215,8 +225,10 @@ class MoveitForwardKinematicsClient(AbstractROSClient):
         rospy.loginfo("Connecting to Forward Kinematics service.")
         try:
             self.service.wait_for_service()
-        except (rospy.ServiceException, rospy.ROSException), e:
-            rospy.logerr("Failed to connect to service: %s" % (e,))
+        except rospy.ServiceException as e:
+            rospy.logerr("Service call failed: %s" % (e,))
+        except rospy.ROSException as e:
+            rospy.logerr("General ROS Exception: %s" % (e,))
 
     def close(self):
         """
@@ -278,8 +290,10 @@ class MoveitInverseKinematicsClient(AbstractROSClient):
         rospy.loginfo("Connecting to Inverse Kinematics service.")
         try:
             self.service.wait_for_service()
-        except (rospy.ServiceException, rospy.ROSException), e:
-            rospy.logerr("Failed to connect to service: %s" % (e,))
+        except rospy.ServiceException as e:
+            rospy.logerr("Service call failed: %s" % (e,))
+        except rospy.ROSException as e:
+            rospy.logerr("General ROS Exception: %s" % (e,))
 
     def close(self):
         """
