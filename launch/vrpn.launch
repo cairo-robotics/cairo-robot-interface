@@ -1,6 +1,6 @@
 <launch>
 
-  <arg name="server" default="desktop-ckithm9.local"/>
+  <arg name="server" default="192.168.50.10"/>
 
   <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">
     <rosparam subst_value="true">
@@ -20,6 +20,7 @@
       #- FirstTracker
       #- SecondTracker
     </rosparam>
+
   </node>
 
 </launch>
