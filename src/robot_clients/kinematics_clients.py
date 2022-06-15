@@ -301,7 +301,7 @@ class MoveitInverseKinematicsClient(AbstractROSClient):
         """
         self.ik_srv.close()
 
-    def call(self, pose, group_name="right_arm", link="/right_gripper_tip", avoid_collisions=True, attempts=10):
+    def call(self, pose, group_name="right_arm", link="/right_gripper_tip", avoid_collisions=True):
         """
         Call the inverse kinematics service "/compute_ik" to get IK for a give Pose (must be PoseStamped).
 
@@ -315,8 +315,6 @@ class MoveitInverseKinematicsClient(AbstractROSClient):
             Pose (must include frame_id) to caluclate the IK.
         avoid_collisions : Bool
             True for IK results that avoid collisions.
-        attempts : int
-            Number of attempts to try before deemed at failure.
         Returns
         -------
         response : InverseKinematicsResponse
