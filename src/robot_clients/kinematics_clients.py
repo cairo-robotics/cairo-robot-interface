@@ -301,7 +301,7 @@ class MoveitInverseKinematicsClient(AbstractROSClient):
         """
         self.ik_srv.close()
 
-    def call(self, pose, group_name="right_arm", link="/right_gripper_tip", avoid_collisions=True, attempts=10):
+    def call(self, pose, group_name="right_arm", link="/right_gripper_tip", avoid_collisions=True):
         """
         Call the inverse kinematics service "/compute_ik" to get IK for a give Pose (must be PoseStamped).
 
@@ -315,8 +315,6 @@ class MoveitInverseKinematicsClient(AbstractROSClient):
             Pose (must include frame_id) to caluclate the IK.
         avoid_collisions : Bool
             True for IK results that avoid collisions.
-        attempts : int
-            Number of attempts to try before deemed at failure.
         Returns
         -------
         response : InverseKinematicsResponse
@@ -328,12 +326,18 @@ class MoveitInverseKinematicsClient(AbstractROSClient):
         request.ik_request.ik_link_name = link
         if isinstance(pose, PoseStamped):
             request.ik_request.pose_stamped = pose
+        elif isinstance(pose, Pose):
+            ps = PoseStamped()
+            ps.pose = pose
+            request.ik_request.pose_stamped = ps
         else:
             rospy.logerr(
-                "Pose must be of type PoseStamped for the InverseKinematics call() method!")
-            raise ValueError("Pose must be of type PoseStamped for the InverseKinematics call() method!")
-        request.ik_request.attempts = attempts
+                "Pose must be of type PoseStamped or Pose of geometry_msgs for the InverseKinematics call() method!")
+            raise ValueError("Pose must be of type PoseStamped or Pose of geometry_msgs for the InverseKinematics call() method!")
+        # request.ik_request.attempts = attempts
+        print(request)
         response = self.service.call(request)
+        print(response)
         if response.error_code == 99999:
             return InverseKinematicsResponse(False, None)
         else:
