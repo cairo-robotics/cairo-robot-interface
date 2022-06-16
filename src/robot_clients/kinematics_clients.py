@@ -241,7 +241,7 @@ class MoveitForwardKinematicsClient(AbstractROSClient):
              joint_names=['right_j0', 'right_j1', 'right_j2',
                           'right_j3', 'right_j4', 'right_j5', 'right_j6'],
              links=["right_gripper_tip"],
-             frame_id="/base"):
+             frame_id="base"):
         """
         Call the forward kinematics service "/compute_fk" to get FK of a joint configuration.
 
