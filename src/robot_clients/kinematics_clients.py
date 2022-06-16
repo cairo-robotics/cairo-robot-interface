@@ -266,9 +266,8 @@ class MoveitForwardKinematicsClient(AbstractROSClient):
         request.robot_state.joint_state.position = positions
         request.header.frame_id = frame_id
         response = self.service.call(request)
-
         # check if there is a moveit failure.
-        if response.error_code == 99999:
+        if response.error_code.val != 1:
             return ForwardKinematicsResponse(False, None)
         else:
             return ForwardKinematicsResponse(True, response.pose_stamped[0].pose)
@@ -335,10 +334,8 @@ class MoveitInverseKinematicsClient(AbstractROSClient):
                 "Pose must be of type PoseStamped or Pose of geometry_msgs for the InverseKinematics call() method!")
             raise ValueError("Pose must be of type PoseStamped or Pose of geometry_msgs for the InverseKinematics call() method!")
         # request.ik_request.attempts = attempts
-        print(request)
         response = self.service.call(request)
-        print(response)
-        if response.error_code == 99999:
+        if response.error_code.val != 1:
             return InverseKinematicsResponse(False, None)
         else:
             return InverseKinematicsResponse(True, response.solution.joint_state)

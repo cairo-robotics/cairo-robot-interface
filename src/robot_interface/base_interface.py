@@ -8,11 +8,11 @@ class AbstractRobotInterface:
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def get_FK_pose(self, joints):
+    def forward_kinematics(self, joints):
         pass
 
     @abstractmethod
-    def get_IK_pose(self, pose):
+    def inverse_kinematics(self, pose):
         pass
 
     @abstractmethod
