@@ -144,7 +144,7 @@ class SawyerInverseKinematicsClient(AbstractROSClient):
             The limb for the service name; defaults to 'right'
         """
         self.ns = "ExternalTools/" + limb + "/PositionKinematicsNode/IKService"
-        self.service = rospy.ServiceProxy(ns, SolvePositionIK, persistent=True)
+        self.service = rospy.ServiceProxy(self.ns, SolvePositionIK, persistent=True)
         rospy.loginfo("Connecting to Inverse Kinematics service.")
         try:
             self.service.wait_for_service()
@@ -178,14 +178,18 @@ class SawyerInverseKinematicsClient(AbstractROSClient):
         """
 
         ikreq = SolvePositionIKRequest()
-        hdr = Header(stamp=rospy.Time.now(), frame_id='base')
-        poses = pose
-        poses.hdr = hdr
-        # Add desired pose for inverse kinematics
-        ikreq.pose_stamp.append(poses[self.limb])
+       
+        ikreq = SolvePositionIKRequest()
+        if isinstance(pose, PoseStamped):
+            pose.header = Header(stamp=rospy.Time.now(), frame_id='base')
+            ikreq.pose_stamp = [pose]
+        elif isinstance(pose, Pose):
+            ps = PoseStamped()
+            ps.header = Header(stamp=rospy.Time.now(), frame_id='base')
+            ps.pose = pose
+            ikreq.pose_stamp = [ps]
         # Request inverse kinematics from base to "right_hand" link
-        ikreq.tip_names.append(tip_name)
-
+        ikreq.tip_names = [tip_name]
         try:
             resp = self.service(ikreq)
         except rospy.ServiceException as e:
@@ -203,7 +207,7 @@ class SawyerInverseKinematicsClient(AbstractROSClient):
             rospy.logdebug(
                 "SUCCESS - Valid Joint Solution Found from Seed Type: %s" % (seed_str,))
             # Format solution into Limb API-compatible dictionary
-            rospy.logdebug("\nIK Joint Solution:\n%s", limb_joints)
+            rospy.logdebug("\nIK Joint Solution:\n%s", resp.joints[0])
             return InverseKinematicsResponse(True, resp.joints[0])
         else:
             return InverseKinematicsResponse(False, None)
