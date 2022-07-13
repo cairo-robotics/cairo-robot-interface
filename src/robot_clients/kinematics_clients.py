@@ -1,3 +1,4 @@
+from sympy import sequence
 import rospy
 from robot_clients.abstract_clients import AbstractROSClient
 from moveit_msgs.srv import GetPositionFK, GetPositionFKRequest, GetPositionIK, \
@@ -468,6 +469,7 @@ class CollisionIKInverseKinematicsClient(AbstractROSClient):
             rospy.logerr("Service call failed: %s" % (e,))
         except rospy.ROSException as e:
             rospy.logerr("General ROS Exception: %s" % (e,))
+        self.seq = 1
 
     def close(self):
         """
@@ -476,6 +478,8 @@ class CollisionIKInverseKinematicsClient(AbstractROSClient):
         self.service.close()
 
     def call(self, pose):
+        
+
         """
         Call the inverse kinematics service "/compute_ik" to get IK for a give Pose (must be PoseStamped).
 
@@ -498,9 +502,10 @@ class CollisionIKInverseKinematicsClient(AbstractROSClient):
             rospy.logerr(
                 "Pose must be of type PoseStamped or Pose of geometry_msgs for the CollisionIK inverse kinematics call() method!")
             raise ValueError("Pose must be of type PoseStamped or Pose of geometry_msgs for the CollisionIK inverse kinematics call() method!")
-        # request.ik_request.attempts = attempts
+        request.ee_pose_goals.header.seq = self.seq
+        self.seq += 1
+        print(request)
         response = self.service.call(request)
-        configuration = []
         return InverseKinematicsResponse(True, response.joint_angles.angles)
     
 
@@ -516,7 +521,7 @@ class CollisionIKForwardKinematicsClient(AbstractROSClient):
         The ROS Service proxy object
     """
     def __init__(self):
-        self.service = rospy.ServiceProxy('collision_ik/inverse_kinematics', CollisionFKSolution)        
+        self.service = rospy.ServiceProxy('collision_ik/forward_kinematics', CollisionFKSolution)        
         rospy.loginfo("Connecting to Collision IK Kinematics service.")
         try:
             self.service.wait_for_service()
@@ -545,6 +550,6 @@ class CollisionIKForwardKinematicsClient(AbstractROSClient):
             The ForwardKinematicsResponse response built from from the /compute_fk service response.
         """
         request = CollisionFKSolutionRequest()
-        request.joint_angles.angles = joint_positions
+        request.angles = joint_positions
         response = self.service.call(request)
-        return ForwardKinematicsResponse(True, response.ee_pose.pose)
+        return ForwardKinematicsResponse(True, response.ee_pose)
