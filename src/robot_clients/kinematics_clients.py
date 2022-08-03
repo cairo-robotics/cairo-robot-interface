@@ -19,9 +19,10 @@ from intera_core_msgs.srv import (
     SolvePositionFK,
     SolvePositionFKRequest
 )
-
-from collision_ik.srv import CollisionIKSolution, CollisionFKSolution, CollisionIKSolutionRequest, CollisionFKSolutionRequest
-
+try:
+    from collision_ik.srv import CollisionIKSolution, CollisionFKSolution, CollisionIKSolutionRequest, CollisionFKSolutionRequest
+except ImportError:
+    pass    
 class ForwardKinematicsResponse():
 
     def __init__(self, valid, pose=None):
