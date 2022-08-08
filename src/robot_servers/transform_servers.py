@@ -48,7 +48,10 @@ class TransformLookupService():
             return resp
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
             resp.error.error = 1
-            resp.error.error_string = e.message
+            if hasattr(e, 'message'):
+                resp.error.error_string = e.message
+            else:
+                resp.error.error_string = str(type(e))
             return resp
 
     def start_server(self):
