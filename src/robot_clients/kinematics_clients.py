@@ -1,4 +1,3 @@
-from sympy import sequence
 import rospy
 from robot_clients.abstract_clients import AbstractROSClient
 from moveit_msgs.srv import GetPositionFK, GetPositionFKRequest, GetPositionIK, \
