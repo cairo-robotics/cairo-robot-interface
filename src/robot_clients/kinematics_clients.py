@@ -482,7 +482,7 @@ class CollisionIKInverseKinematicsClient(AbstractROSClient):
         
 
         """
-        Call the inverse kinematics service "/compute_ik" to get IK for a give Pose (must be PoseStamped).
+        Call the inverse kinematics service "collision_ik/inverse_kinematics' to get IK for a give Pose.
 
         Parameters
         ----------
@@ -514,7 +514,7 @@ class CollisionIKForwardKinematicsClient(AbstractROSClient):
     """
     Class that creates a ROS client in order to make service calls to calculate
     forward kinematics  give a set of joint positions. This client connects to
-    MoveIt's '/compute_fk' service.
+    "collision_ik/forward_kinematics' in Cairo Labs 'collision_ik' ROS package.
 
     Attributes
     ----------
