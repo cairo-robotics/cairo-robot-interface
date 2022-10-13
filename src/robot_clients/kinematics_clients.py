@@ -74,9 +74,9 @@ class SawyerForwardKinematicsClient(AbstractROSClient):
 
     def call(self,
              joint_positions,
-             joint_names=['right_j0', 'right_j1', 'right_j2', 'right_j3',
-                          'right_j4', 'right_j5', 'right_j6'],
-             tip_names=["right_gripper_tip"]):
+             joint_names=('right_j0', 'right_j1', 'right_j2', 'right_j3',
+                          'right_j4', 'right_j5', 'right_j6'),
+             tip_names=("right_gripper_tip")):
         """
         Call 'FKService' service
 
@@ -97,10 +97,11 @@ class SawyerForwardKinematicsClient(AbstractROSClient):
         fkreq = SolvePositionFKRequest()
         joints = JointState()
         joints.name = joint_names
+        print(joints.name)
         joints.position = joint_positions
+        print(joints.position)
         # Add desired pose for forward kinematics
         fkreq.configuration.append(joints)
-        # Request forward kinematics from base to "right_hand" link
         fkreq.tip_names = tip_names
 
         try:
@@ -272,6 +273,7 @@ class MoveitForwardKinematicsClient(AbstractROSClient):
         request.robot_state.joint_state.position = positions
         request.header.frame_id = frame_id
         response = self.service.call(request)
+        rospy.loginfo(response)
         # check if there is a moveit failure.
         if response.error_code.val != 1:
             return ForwardKinematicsResponse(False, None)

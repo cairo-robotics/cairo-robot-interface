@@ -18,14 +18,14 @@ class SawyerMoveitInterface(AbstractMoveitInterface, AbstractRobotInterface):
     robot : moveit_commander.RobotCommander()
         The RobotCommander used to get RobotState
     fk_client : MoveitForwardKinematicsClient
-        The fMoveitForwardKinematicsClient to make Forward Kinematics calculation requests.
+        The MoveitForwardKinematicsClient to make Forward Kinematics calculation requests.
     ik_client : MoveitInverseKinematicsClient
-        The fMoveitForwardKinematicsClient to make Inverse Kinematics calculation requests.
+        The MoveitForwardKinematicsClient to make Inverse Kinematics calculation requests.
     rsv_client : MoveitRobotStateValidityClient
         The MoveitRobotStateValidityClient to check validity of robot states.
     """
 
-    def __init__(self, planning_group="right_arm"):
+    def __init__(self, planning_group="right_arm", tip_names=("right_gripper_tip")):
         """
         Parameters
         ----------
@@ -36,9 +36,9 @@ class SawyerMoveitInterface(AbstractMoveitInterface, AbstractRobotInterface):
         robot : moveit_commander.RobotCommander()
             The RobotCommander used to get RobotState
         fk_client : MoveitForwardKinematicsClient
-            The fMoveitForwardKinematicsClient to make Forward Kinematics calculation requests.
+            The MoveitForwardKinematicsClient to make Forward Kinematics calculation requests.
         ik_client : MoveitInverseKinematicsClient
-            The fMoveitForwardKinematicsClient to make Inverse Kinematics calculation requests.
+            The MoveitForwardKinematicsClient to make Inverse Kinematics calculation requests.
         rsv_client : MoveitRobotStateValidityClient
             The MoveitRobotStateValidityClient to check validity of robot states.
         """
@@ -48,6 +48,7 @@ class SawyerMoveitInterface(AbstractMoveitInterface, AbstractRobotInterface):
         self.fk_client = MoveitForwardKinematicsClient()
         self.ik_client = MoveitInverseKinematicsClient()
         self.rsv_client = MoveitRobotStateValidityClient()
+        self.tip_names=tip_names
 
     def set_planner(self, planner):
         """
@@ -147,7 +148,6 @@ class SawyerMoveitInterface(AbstractMoveitInterface, AbstractRobotInterface):
         plan : RobotTrajectory
             A RobotTrajectory representing the plan to execute.
         """
-        print(plan)
         self.group.execute(plan[1])
 
     def move_to_joint_targets(self, joint_target_list):
@@ -178,7 +178,7 @@ class SawyerMoveitInterface(AbstractMoveitInterface, AbstractRobotInterface):
         : geometry_msgs.Pose / None
             Returns the calculate Pose, or None if the response is invalid.
         """
-        resp = self.fk_client.call(joint_positions)
+        resp = self.fk_client.call(joint_positions, links=self.tip_names)
         if resp.valid:
             pose = resp.pose
             return pose
